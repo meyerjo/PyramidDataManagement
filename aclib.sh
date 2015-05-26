@@ -7,9 +7,10 @@ IGNORE_ERROR=true
 SILENT=/dev/null
 
 WORKING_DIR=my_work_dir
+ACLIB_DIR=/vagrant/aclib
 
-cd /vagrant
-mkdir aclib || $IGNORE_ERROR
+mkdir $ACLIB_DIR || $IGNORE_ERROR
+cd $ACLIB_DIR/..
 
 # Download version if newer
 wget -N -nv http://www.aclib.net/data/aclib.tar.gz
@@ -25,7 +26,7 @@ echo "#######################"
 echo "# Starting experiment #"
 echo "#######################"
 
-python run_aclib.py runconfig.json
+screen -d -m python /vagrant/run_aclib.py /vagrant/runconfig.json
 
 echo "##################################"
 echo "# Experiment started.            #"

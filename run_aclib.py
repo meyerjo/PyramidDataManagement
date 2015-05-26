@@ -25,14 +25,12 @@ def main():
     config.setdefault('config_file', os.path.join(aclib_root, "src", "data", "config.json"))
     config.setdefault('seed', 1)
     config.setdefault('working_directory', os.getcwd())
-    ac_args = []
 
     configurator = configurators[config['configurator']](
         config['config_file'],
         config['scenario'],
         aclib_root,
-        config['working_directory'],
-        ac_args)
+        config['working_directory'])
 
     configurator.prepare(config['seed'])
 
