@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 
 import json
 import sys
+import os
 import argparse
-import subprocess
 
 
 def main():
@@ -13,20 +13,50 @@ def main():
     args = parser.parse_args()
     config = json.load(args.config)
 
-    subprocess.call(["python", "aclib/src/run_scenario.py", "-s", config["scenario"], "-c", config["configurator"]], stdout=sys.stdout, stderr=sys.stderr)
+    aclib_root = import_aclib(config['aclib_path'])
+    import run_scenario as runner
+
+    configurators = {
+        'ParamILS': runner.ParamILSRunner,
+        'SMAC': runner.SMACRunner,
+        'irace': runner.IRaceRunner
+    }
+
+    config.setdefault('config_file', os.path.join(aclib_root, "src", "data", "config.json"))
+    config.setdefault('seed', 1)
+    config.setdefault('working_directory', os.getcwd())
+    ac_args = []
+
+    configurator = configurators[config['configurator']](
+        config['config_file'],
+        config['scenario'],
+        aclib_root,
+        config['working_directory'],
+        ac_args)
+
+    configurator.prepare(config['seed'])
+
+    try:
+        configurator.run_scenario()
+    except (KeyboardInterrupt, SystemExit):
+        ### handle keyboard interrupt ###
+        configurator.cleanup()
+        return 1
+
+
+# Workaround to import aclib modules. Maybe change this by integrating into
+# aclib src or packaging aclib
+def import_aclib(paths):
+    def import_path(path):
+        '''Predicate to check and import an aclib path'''
+        if os.path.isdir(path):
+            src_path = os.path.join(path, 'src')
+            if os.path.isdir(src_path):
+                sys.path.insert(0, src_path)
+                return True
+
+    return filter(import_path, paths)[0]
 
 
 if __name__ == '__main__':
-
-    # Workaround to import aclib modules. Maybe change this by integrating into
-    # aclib src or packaging aclib
-
-    def append_path(path):
-        import os
-        if os.path.isdir(path):
-            sys.path.insert(0, path)
-
-    append_path('../../aclib/src')
-    append_path('/home/aclib/aclib/src')
-    from downloader import Downloader
     main()

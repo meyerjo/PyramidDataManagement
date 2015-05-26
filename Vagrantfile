@@ -29,10 +29,10 @@ Vagrant.configure(2) do |config|
     end
 
     config.ssh.username = 'aclib'
-    config.ssh.password = 'aclib'
-    config.vm.synced_folder "target-algorithms/", "/home/aclib/aclib/target-algorithms", owner: "aclib"
-    config.vm.synced_folder "instances/", "/home/aclib/aclib/instances", owner: "aclib"
-    config.vm.synced_folder "scenarios/", "/home/aclib/aclib/scenarios", owner: "aclib"
+    config.ssh.password = '4clib!'
+    config.vm.synced_folder "target-algorithms/", "/vagrant/aclib/target-algorithms", owner: "aclib"
+    config.vm.synced_folder "instances/", "/vagrant/aclib/instances", owner: "aclib"
+    config.vm.synced_folder "scenarios/", "/vagrant/aclib/scenarios", owner: "aclib"
     config.vm.provision "file", source: ".bashrc", destination: "/home/aclib/.bashrc"
     config.vm.provision "shell", path: "install.sh"
 end
