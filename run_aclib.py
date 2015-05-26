@@ -15,16 +15,20 @@ def main():
 
     aclib_root = import_aclib(config['aclib_path'])
     import run_scenario as runner
+    import install_scenario
+
+    config.setdefault('config_file', os.path.join(aclib_root, "src", "data", "config.json"))
+    config.setdefault('seed', 1)
+    config.setdefault('working_directory', os.getcwd())
+
+    installer = install_scenario.Installer(config['config_file'])
+    installer.install_single_scenario(config['scenario'])
 
     configurators = {
         'ParamILS': runner.ParamILSRunner,
         'SMAC': runner.SMACRunner,
         'irace': runner.IRaceRunner
     }
-
-    config.setdefault('config_file', os.path.join(aclib_root, "src", "data", "config.json"))
-    config.setdefault('seed', 1)
-    config.setdefault('working_directory', os.getcwd())
 
     configurator = configurators[config['configurator']](
         config['config_file'],

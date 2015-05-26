@@ -20,8 +20,6 @@ tar xzkf aclib.tar.gz 2> /dev/null
 mkdir $WORKING_DIR || $IGNORE_ERROR
 cd $WORKING_DIR
 
-yes | python /vagrant/aclib/src/install_scenario.py -s CSSC_regressiontests_spear
-
 echo "#######################"
 echo "# Starting experiment #"
 echo "#######################"
