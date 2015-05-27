@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider :azure do |azure|
         azure.subscription_id = "daa4b9a5-0ee0-4c47-9136-ad1e7a22e4a7"
-        azure.mgmt_certificate = 'daa4b9a5-0ee0-4c47-9136-ad1e7a22e4a7.pem'
+        azure.mgmt_certificate = '../daa4b9a5-0ee0-4c47-9136-ad1e7a22e4a7.pem'
         azure.vm_image = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB"
         azure.vm_size = "Small"
         azure.mgmt_endpoint = 'https://management.core.windows.net'
