@@ -30,7 +30,7 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = 'aclib'
     config.ssh.password = '4clib!'
-    config.vm.synced_folder "target-algorithms/", "/vagrant/aclib/target-algorithms", owner: "aclib"
+    config.vm.synced_folder "target_algorithms/", "/vagrant/aclib/target_algorithms", owner: "aclib"
     config.vm.synced_folder "instances/", "/vagrant/aclib/instances", owner: "aclib"
     config.vm.synced_folder "scenarios/", "/vagrant/aclib/scenarios", owner: "aclib"
     config.vm.provision "file", source: ".bashrc", destination: "/home/aclib/.bashrc"

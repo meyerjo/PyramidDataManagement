@@ -1,8 +1,10 @@
 {
+    "working_directory": "debug_experiment",
     "configurator": "SMAC",
     "scenario": "CSSC_regressiontests_spear",
     "aclib_path": [
         "../../aclib",
+        "../../../aclib",
         "/home/aclib/aclib"
     ]
 }
