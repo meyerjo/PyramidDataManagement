@@ -3,12 +3,6 @@
         "name": "debug_experiment",
         "configurator": "SMAC",
         "scenario": "CSSC_regressiontests_spear",
-        "aclib_path": [
-            "../../aclib",
-            "../../../aclib",
-            "/home/aclib/aclib",
-            "/vagrant/aclib"
-        ],
         "times": 5
     },
     "machine": {
