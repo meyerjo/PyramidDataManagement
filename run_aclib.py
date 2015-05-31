@@ -21,8 +21,6 @@ def main():
         'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
     config['experiment'].setdefault(
         'seed', 1)
-    config['experiment'].setdefault(
-        'experiment_name', os.getcwd())
 
     installer = install_scenario.Installer(config['experiment']['config_file'])
     installer.install_single_scenario(config['experiment']['scenario'])
@@ -39,7 +37,7 @@ def main():
         aclib_root,
         config['experiment']['name'])
 
-    configurator.prepare(config['seed'])
+    configurator.prepare(config['experiment']['seed'])
 
     try:
         configurator.run_scenario()

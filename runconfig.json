@@ -6,7 +6,8 @@
         "aclib_path": [
             "../../aclib",
             "../../../aclib",
-            "/home/aclib/aclib"
+            "/home/aclib/aclib",
+            "/vagrant/aclib"
         ],
         "times": 5
     },
