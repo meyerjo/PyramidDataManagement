@@ -15,5 +15,6 @@
         "memory": 1024,
         "azure_category": "Small",
         "location": "West Europe"
-    }
+    },
+    "debug": true
 }

@@ -26,8 +26,12 @@ echo "#######################"
 echo "# Starting experiment #"
 echo "#######################"
 
-screen -d -m $SCRIPT_DIR/run_aclib_helper.sh $WORKING_DIR/run_aclib.py $SCRIPT_DIR/runconfig.json
-
+grep  "\"debug\"\s*:\s*true" < runconfig.json
+if [ $? -eq 0 ] then
+    yes | $WORKING_DIR/run_aclib.py $SCRIPT_DIR/runconfig.json
+else
+    screen -d -m $SCRIPT_DIR/run_aclib_helper.sh $WORKING_DIR/run_aclib.py $SCRIPT_DIR/runconfig.json
+fi
 echo "##################################"
 echo "# Experiment started.            #"
 echo "# Run vagrant ssh to reattach.   #"
