@@ -1,10 +1,19 @@
 {
-    "working_directory": "debug_experiment",
-    "configurator": "SMAC",
-    "scenario": "CSSC_regressiontests_spear",
-    "aclib_path": [
-        "../../aclib",
-        "../../../aclib",
-        "/home/aclib/aclib"
-    ]
+    "experiment": {
+        "name": "debug_experiment",
+        "configurator": "SMAC",
+        "scenario": "CSSC_regressiontests_spear",
+        "aclib_path": [
+            "../../aclib",
+            "../../../aclib",
+            "/home/aclib/aclib"
+        ],
+        "times": 5
+    },
+    "machine": {
+        "cores": 1,
+        "memory": 1024,
+        "azure_category": "Small",
+        "location": "West Europe"
+    }
 }

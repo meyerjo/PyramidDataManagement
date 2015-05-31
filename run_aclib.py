@@ -13,16 +13,19 @@ def main():
     args = parser.parse_args()
     config = json.load(args.config)
 
-    aclib_root = import_aclib(config['aclib_path'])
+    aclib_root = import_aclib(config['experiment']['aclib_path'])
     import run_scenario as runner
     import install_scenario
 
-    config.setdefault('config_file', os.path.join(aclib_root, "src", "data", "config.json"))
-    config.setdefault('seed', 1)
-    config.setdefault('working_directory', os.getcwd())
+    config['experiment'].setdefault(
+        'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
+    config['experiment'].setdefault(
+        'seed', 1)
+    config['experiment'].setdefault(
+        'experiment_name', os.getcwd())
 
-    installer = install_scenario.Installer(config['config_file'])
-    installer.install_single_scenario(config['scenario'])
+    installer = install_scenario.Installer(config['experiment']['config_file'])
+    installer.install_single_scenario(config['experiment']['scenario'])
 
     configurators = {
         'ParamILS': runner.ParamILSRunner,
@@ -30,11 +33,11 @@ def main():
         'irace': runner.IRaceRunner
     }
 
-    configurator = configurators[config['configurator']](
-        config['config_file'],
-        config['scenario'],
+    configurator = configurators[config['experiment']['configurator']](
+        config['experiment']['config_file'],
+        config['experiment']['scenario'],
         aclib_root,
-        config['working_directory'])
+        config['experiment']['name'])
 
     configurator.prepare(config['seed'])
 
