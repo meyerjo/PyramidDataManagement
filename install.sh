@@ -13,7 +13,11 @@ echo "#############################"
 echo "# Executing install scripts #"
 echo "#############################"
 
-apt-get update
+# Update if last update is older than 1 day
+# Probs to http://askubuntu.com/questions/487606/bash-update-apt-get-only-if-apt-cache-is-older-than-10-minutes
+if [ "$[$(date +%s) - $(stat -c %Z /var/lib/apt/periodic/update-success-stamp)]" -ge 86400000 ]; then
+    apt-get update
+fi
 apt-get install -y default-jre ruby screen
 
 # Disable password authentication
