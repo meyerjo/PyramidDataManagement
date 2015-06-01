@@ -1,10 +1,11 @@
 #!/usr/bin/env python2.7
+from __future__ import print_function
 import json
 import sys
 import os
 import argparse
-import copy
 from threading import Thread
+
 
 # Workaround to import aclib modules. Maybe change this by integrating into
 # aclib src or packaging aclib
@@ -36,31 +37,35 @@ def main():
     args = parser.parse_args()
     config = json.load(args.config)
     config['experiment'].setdefault('repetition', 1)
+    config['experiment'].setdefault(
+        'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
+    config['experiment'].setdefault('seed', 1)
+    config['experiment'].setdefault('parallel', False)
 
     total_runs = config['experiment']['repetition']
-    for run_number in range(total_runs):
-        exp_config = copy.deepcopy(config)
-        if total_runs > 1:
-            exp_config['experiment']['name'] += '_%d' % (run_number + 1)
-        runner = ExperimentRunner()
-        runner.set_configurator(exp_config)
-        runner.run_configurator()
+
+    run_threads = []
+    for i in range(total_runs):
+        predecessor = run_threads[-1] if (run_threads and not config['experiment']['parallel']) else None
+        run_threads.append(ExperimentRunner(i, config, predecessor))
+        run_threads[-1].start()
+
+    try:
+        while True:
+            time.sleep(3600)  # Non busy waiting ;)
+    except (KeyboardInterrupt):
+            print("Exiting due to KeyboardInterrupt", file=sys.stderr)
+            sys.exit(1)
 
 
-class ExperimentRunner(object):
+class ExperimentRunner(Thread):
 
-    configurators = {
-        'ParamILS': runner.ParamILSRunner,
-        'SMAC': runner.SMACRunner,
-        'irace': runner.IRaceRunner
-    }
+    def __init__(self, counter, config, wait_for=None):
+        Thread.__init__(self, name='ac-{0:s}-{1:02d}'.format(
+            config['experiment']['name'],
+            counter))
 
-    def set_configurator(self, config):
-
-        config['experiment'].setdefault(
-            'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
-        config['experiment'].setdefault(
-            'seed', 1)
+        self.previous_thread = wait_for
 
         installer = install_scenario.Installer(config['experiment']['config_file'])
         installer.install_single_scenario(config['experiment']['scenario'])
@@ -73,7 +78,16 @@ class ExperimentRunner(object):
 
         self.configurator.prepare(config['experiment']['seed'])
 
-    def run_configurator(self):
+    configurators = {
+        'ParamILS': runner.ParamILSRunner,
+        'SMAC': runner.SMACRunner,
+        'irace': runner.IRaceRunner
+    }
+
+    def run(self):
+        if self.previous_thread:
+            self.previous_thread.join()
+
         try:
             self.configurator.run_scenario()
         except (KeyboardInterrupt, SystemExit):

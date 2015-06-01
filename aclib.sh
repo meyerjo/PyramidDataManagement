@@ -26,7 +26,7 @@ echo "#######################"
 
 grep  "\"debug\"\s*:\s*true" < /vagrant/runconfig.json
 if [ $? -eq 0 ]; then
-    python -m pdb $ACLIB_DIR/src/run_aclib.py $SCRIPT_DIR/runconfig.json
+    screen -d -m python -m pdb $ACLIB_DIR/src/run_aclib.py $SCRIPT_DIR/runconfig.json
 else
     screen -d -m $SCRIPT_DIR/run_aclib_helper.sh $ACLIB_DIR/src/run_aclib.py $SCRIPT_DIR/runconfig.json
 fi
