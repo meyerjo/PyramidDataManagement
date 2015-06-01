@@ -1,15 +1,14 @@
 {
     "experiment": {
-        "name": "debug_experiment",
+        "name": "debug",
         "configurator": "SMAC",
         "scenario": "CSSC_regressiontests_spear",
-        "times": 5
+        "times": 1
     },
     "machine": {
         "cores": 1,
         "memory": 1024,
         "azure_category": "Small",
         "location": "West Europe"
-    },
-    "debug": true
+    }
 }
