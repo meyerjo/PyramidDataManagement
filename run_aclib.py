@@ -4,6 +4,7 @@ import sys
 import os
 import argparse
 import copy
+from threading import Thread
 
 # Workaround to import aclib modules. Maybe change this by integrating into
 # aclib src or packaging aclib
@@ -34,9 +35,9 @@ def main():
     parser.add_argument('config', type=argparse.FileType('r', 0), default=sys.stdin)
     args = parser.parse_args()
     config = json.load(args.config)
-    config['experiment'].setdefault('times', 1)
+    config['experiment'].setdefault('repetition', 1)
 
-    total_runs = config['experiment']['times']
+    total_runs = config['experiment']['repetition']
     for run_number in range(total_runs):
         exp_config = copy.deepcopy(config)
         if total_runs > 1:
@@ -53,9 +54,6 @@ class ExperimentRunner(object):
         'SMAC': runner.SMACRunner,
         'irace': runner.IRaceRunner
     }
-
-    def __init__(self):
-        self.configurator = None
 
     def set_configurator(self, config):
 

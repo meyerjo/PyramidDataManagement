@@ -3,7 +3,7 @@
         "name": "debug",
         "configurator": "SMAC",
         "scenario": "CSSC_regressiontests_spear",
-        "times": 1
+        "repetition": 1
     },
     "machine": {
         "cores": 1,
