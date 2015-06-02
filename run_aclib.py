@@ -109,7 +109,7 @@ class ExperimentRunner(threading.Thread):
                 self.config['experiment']['config_file'],
                 self.config['experiment']['scenario'],
                 aclib_root,
-                self.name)
+                os.path.join('results', self.name))
 
             self.configurator.prepare(self.config['experiment']['seed'])
 
