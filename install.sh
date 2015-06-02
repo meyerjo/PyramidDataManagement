@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# SCREENS_RUNNING=`sudo -u aclib screen -ls | grep aclib`
-# if [ $? -eq 0 ]; then
-#     >&2 echo "An instance of aclib is already running."
-#     >&2 echo $SCREENS_RUNNING
-#     >&2 echo "To reattach to the experiment run vagrant ssh"
-#     >&2 echo "Aborting provisioning"
-#     exit 1
-# fi
+SCREENS_RUNNING=`sudo -u aclib screen -ls | grep -E 'There (is a|are) screens? on:'`
+if [ $? -eq 0 ]; then
+    >&2 echo "An instance of aclib is already running."
+    >&2 echo $SCREENS_RUNNING
+    >&2 echo "To reattach to the experiment run vagrant ssh"
+    >&2 echo "and eventually stop the experiment"
+    >&2 echo "Aborting provisioning"
+    exit 1
+fi
 
 echo "#############################"
 echo "# Executing install scripts #"
