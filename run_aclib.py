@@ -5,7 +5,7 @@ import sys
 import os
 import argparse
 from time import sleep
-import threading
+import multiprocessing
 
 
 # Workaround to import aclib modules. Maybe change this by integrating into
@@ -46,20 +46,16 @@ def main():
 
     total_runs = config['experiment']['repetition']
 
-    run_threads = []
-    parallel_run_block = threading.Semaphore(
+    run_processes = []
+    parallel_run_block = multiprocessing.Semaphore(
         config['experiment']['parallel_runs'])
-    install_mutex = threading.Lock()
+    install_mutex = multiprocessing.Lock()
 
     for i in range(total_runs):
-        run_threads.append(ExperimentRunner(i, config, parallel_run_block, install_mutex))
+        run_processes.append(ExperimentRunner(i, config, parallel_run_block, install_mutex))
 
-    spawner = threading.Thread(target=thread_spawner,
-                               args=(run_threads,
-                                     config['experiment']['parallel_runs'],
-                                     parallel_run_block),
-                               name='thread-spawner')
-    spawner.start()
+    for process in run_processes:
+        process.start()
 
     try:
         while True:
@@ -69,20 +65,14 @@ def main():
             sys.exit(1)
 
 
-def thread_spawner(threads, max_number_threads, parallel_run_block):
-    for thread in threads:
-        parallel_run_block.acquire()
-        thread.start()
-
-
-class ExperimentRunner(threading.Thread):
+class ExperimentRunner(multiprocessing.Process):
 
     def __init__(self, counter, config, end_event, install_mutex):
         run_appedix = ('-{0:02d}'.format(counter)
                        if config['experiment']['repetition'] != 1
                        else '')
 
-        threading.Thread.__init__(self, name='{}{}'.format(
+        multiprocessing.Process.__init__(self, name='{}{}'.format(
             config['experiment']['name'],
             run_appedix))
 
@@ -99,6 +89,7 @@ class ExperimentRunner(threading.Thread):
     }
 
     def run(self):
+        self.release_on_exit.acquire()
         print('Starting experiment {}'.format(self.name))
 
         with self.install_mutex:
