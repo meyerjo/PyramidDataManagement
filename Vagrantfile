@@ -43,4 +43,10 @@ Vagrant.configure(2) do |config|
     config.vm.synced_folder "scenarios/", "/vagrant/aclib/scenarios", owner: vm_user
     config.vm.provision "file", source: ".bashrc", destination: "/home/#{vm_user}/.bashrc"
     config.vm.provision "shell", path: "install.sh"
+
+    if ac_config['machine']['multi-machine'] > 1
+        for i in 1..ac_config['machine']['multi-machine']
+            config.vm.define "#{ac_config['experiment']['name']}-#{i}"
+        end
+    end
 end
