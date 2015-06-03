@@ -38,10 +38,9 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = vm_user
     config.ssh.password = vm_pass
-    config.vm.synced_folder "target_algorithms/", "/vagrant/aclib/target_algorithms", owner: vm_user
-    config.vm.synced_folder "instances/", "/vagrant/aclib/instances", owner: vm_user
-    config.vm.synced_folder "scenarios/", "/vagrant/aclib/scenarios", owner: vm_user
-    config.vm.synced_folder "results/", "/vagrant/results", type: "rsync_pull"
+    config.vm.synced_folder "aclib", "/vagrant/aclib", owner: vm_user
+    config.vm.synced_folder "results/", "/vagrant/results", type: "rsync_pull",
+        rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"]
     config.vm.provision "file", source: ".bashrc", destination: "/home/#{vm_user}/.bashrc"
     config.vm.provision "shell", path: "install.sh"
 
