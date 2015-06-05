@@ -4,6 +4,13 @@
 require 'json'
 require 'fileutils'
 
+required_plugins = %w( vagrant-azure vagrant-rsync-pull )
+required_plugins.each do |plugin|
+    if not Vagrant.has_plugin? plugin
+        raise Vagrant::Errors::PluginNotInstalled, name: plugin
+    end
+end
+
 global_config_file = '../credentials.json'
 local_config_file = 'runconfig.json'
 cwd = File.dirname(File.absolute_path(__FILE__))
