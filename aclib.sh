@@ -6,7 +6,7 @@ echo "####################"
 IGNORE_ERROR=true
 SILENT=/dev/null
 
-SCRIPT_DIR=/vagrant
+SCRIPT_DIR=/vagrant/accloud
 ACLIB_DIR=/vagrant/aclib
 
 mkdir $ACLIB_DIR || $IGNORE_ERROR
@@ -19,12 +19,11 @@ tar xzkf aclib.tar.gz 2> /dev/null
 
 ln -s $SCRIPT_DIR/run_aclib.py $ACLIB_DIR/src/run_aclib.py
 
-
 echo "#######################"
 echo "# Starting experiment #"
 echo "#######################"
 
-grep  "\"debug\"\s*:\s*true" < /vagrant/runconfig.json
+grep  "\"debug\"\s*:\s*true" < $SCRIPT_DIR/runconfig.json
 if [ $? -eq 0 ]; then
     screen -d -m python -m pdb $ACLIB_DIR/src/run_aclib.py $SCRIPT_DIR/runconfig.json
 else

@@ -60,16 +60,29 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = vm_user
     config.ssh.password = vm_pass
-    config.vm.synced_folder "aclib", "/vagrant/aclib", type: "rsync", owner: vm_user, create: true
-    config.vm.synced_folder "results", "/vagrant/results", type: "rsync_pull",
-        rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"], create: true
-
-    
-    config.vm.synced_folder cwd, "/vagrant", type: "rsync"
-    config.vm.provision "file", source: "#{cwd}/.bashrc", destination: "/home/#{vm_user}/.bashrc"
 
 
-    config.vm.provision "shell", inline: "/vagrant/install.sh"
+    config.vm.synced_folder ".", "/vagrant/experiment",
+        type: "rsync"
+
+    config.vm.synced_folder "aclib", "/vagrant/aclib",
+        type: "rsync",
+        owner: vm_user,
+        create: true
+
+    config.vm.synced_folder "results", "/vagrant/results",
+        type: "rsync_pull",
+        rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"],
+        create: true
+
+    config.vm.synced_folder cwd, "/vagrant/accloud",
+        type: "rsync"
+
+    config.vm.provision "file",
+        source: File.join(cwd, ".bashrc"),
+        destination: File.join("/home", vm_user, ".bashrc")
+
+    config.vm.provision "shell", inline: "/vagrant/accloud/install.sh"
 
     if ac_config['machine']['multi-machine'] > 1
         for i in 1..ac_config['machine']['multi-machine']
