@@ -27,7 +27,7 @@ rescue Errno::ENOENT => e
     if not File.exists?(local_config_file)
         FileUtils.cp(File.join(cwd, local_config_file), File.join(Dir.pwd, local_config_file))
     end
-    raise Vagrant::Errors::ConfigInvalid, "Please configure the provided config files: #{e.message}"
+    raise Vagrant::Errors::ConfigInvalid, errors: "#{e.message} - Template config file has been inserted"
 end
 
 vm_user = ac_config['vm']['user']
@@ -65,7 +65,7 @@ Vagrant.configure(2) do |config|
         rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"], create: true
 
     
-    config.vm.synced_folder cwd, "/vagrant", type: "rsync",
+    config.vm.synced_folder cwd, "/vagrant", type: "rsync"
     config.vm.provision "file", source: "#{cwd}/.bashrc", destination: "/home/#{vm_user}/.bashrc"
 
 
