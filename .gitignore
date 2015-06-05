@@ -1,3 +1,5 @@
 *.pem
 .vagrant
 results/*
+aclib/*
+ac-cloud.box

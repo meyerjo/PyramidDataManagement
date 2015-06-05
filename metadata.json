@@ -1,16 +1,3 @@
 {
-  "name": "ac-cloud",
-  "description": "This box contains Ubuntu 14.04 LTS 64-bit for Azure and Virtualbox",
-  "versions": [{
-    "version": "0.1.0",
-    "providers": [{
-      "name": "azure",
-      "url": "https://github.com/AC-cloud/azure-credentials/releases/download/0.0.1/azure-credentials.box",
-      "checksum_type": "sha1",
-      "checksum": "a5960786f33e3c1c285377366816f706658ee0ef"
-    }, {
-      "name": "virtualbox",
-      "url": "ubuntu/trusty64"
-    }]
-  }]
+    "provider": "azure"
 }
