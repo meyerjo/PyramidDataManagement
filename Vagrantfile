@@ -60,12 +60,12 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = vm_user
     config.ssh.password = vm_pass
-    config.vm.synced_folder "aclib", "/vagrant/aclib", owner: vm_user, create: true
+    config.vm.synced_folder "aclib", "/vagrant/aclib", type: "rsync", owner: vm_user, create: true
     config.vm.synced_folder "results", "/vagrant/results", type: "rsync_pull",
         rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"], create: true
 
     
-    config.vm.synced_folder cwd, "/vagrant"
+    config.vm.synced_folder cwd, "/vagrant", type: "rsync",
     config.vm.provision "file", source: "#{cwd}/.bashrc", destination: "/home/#{vm_user}/.bashrc"
 
 
