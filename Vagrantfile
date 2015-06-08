@@ -63,7 +63,8 @@ Vagrant.configure(2) do |config|
 
 
     config.vm.synced_folder ".", "/vagrant/experiment",
-        type: "rsync"
+        type: "rsync",
+        rsync__exclude: ["results", "aclib"]
 
     config.vm.synced_folder "aclib", "/vagrant/aclib",
         type: "rsync",
