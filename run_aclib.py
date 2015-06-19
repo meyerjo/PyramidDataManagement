@@ -43,6 +43,7 @@ def main():
         'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
     config['experiment'].setdefault('seed', 1)
     config['experiment'].setdefault('parallel_runs', 1)
+    config['experiment'].setdefault('only_prepare', False)
 
     total_runs = config['experiment']['repetition']
 
@@ -105,7 +106,8 @@ class ExperimentRunner(multiprocessing.Process):
             self.configurator.prepare(self.config['experiment']['seed'])
 
         try:
-            self.configurator.run_scenario()
+            if not self.config['experiment']['only_prepare']:
+                self.configurator.run_scenario()
         except (KeyboardInterrupt, SystemExit):
             ### handle keyboard interrupt ###
             self.configurator.cleanup()
