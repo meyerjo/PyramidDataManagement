@@ -80,8 +80,8 @@ Vagrant.configure(2) do |config|
         type: "rsync"
 
     config.vm.provision "file",
-        source: File.join(cwd, "sshrc"),
-        destination: File.join("/home", vm_user, ".ssh", "rc")
+        source: File.join(cwd, ".bashrc"),
+        destination: File.join("/home", vm_user, ".bashrc")
 
     config.vm.provision "shell", inline: "/vagrant/accloud/install.sh"
 

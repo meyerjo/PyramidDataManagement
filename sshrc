@@ -1,6 +1,0 @@
-# sshrc file to attach to a screen if the connecting client is a human
-# Machines connecting over ssh will not see this
-
-if [ "`/usr/bin/tty`" = "not a tty" ]; then
-	command -v screen >/dev/null 2>&1 && screen -r
-fi
