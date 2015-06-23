@@ -4,6 +4,7 @@
 require 'json'
 require 'fileutils'
 
+# Require needed vagrant plugins
 required_plugins = %w( vagrant-azure vagrant-rsync-pull )
 required_plugins.each do |plugin|
     if not Vagrant.has_plugin? plugin
@@ -11,15 +12,18 @@ required_plugins.each do |plugin|
     end
 end
 
+# Load ACcloud config files
 global_config_file = '../credentials.json'
 local_config_file = 'runconfig.json'
 cwd = File.dirname(File.absolute_path(__FILE__))
 
+# Parse config files
 begin
 local_config = JSON.parse(File.read(local_config_file))
 global_config = JSON.parse(File.read(global_config_file))
 ac_config = local_config.merge(global_config)
 
+# If config file in experiment box does not exist, copy default file
 rescue Errno::ENOENT => e
     if not File.exists?(global_config_file)
         FileUtils.cp(File.join(cwd, File.basename(global_config_file)), File.join(Dir.pwd, global_config_file))
@@ -30,9 +34,6 @@ rescue Errno::ENOENT => e
     raise Vagrant::Errors::ConfigInvalid, errors: "#{e.message} - Template config file has been inserted"
 end
 
-vm_user = ac_config['vm']['user']
-vm_pass = ac_config['vm']['password']
-
 
 Vagrant.configure(2) do |config|
     config.vm.provider "azure"
@@ -41,16 +42,23 @@ Vagrant.configure(2) do |config|
     config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
 
     config.vm.provider :azure do |azure|
+
+        # Subscription id and Management certificate for authentication with the azure service
         azure.subscription_id = ac_config['azure']['subscription_id']
         azure.mgmt_certificate = File.join(File.dirname(global_config_file), ac_config['azure']['certificate'])
+        azure.mgmt_endpoint = 'https://management.core.windows.net'
+        
+        # Specifics about the vm image and configuration
         azure.vm_image = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB"
         azure.vm_size = ac_config['machine']['azure_category']
-        azure.mgmt_endpoint = 'https://management.core.windows.net'
+
+        # Hostname and location of the machine
         azure.vm_name = ac_config['experiment']['name']
         azure.vm_location = ac_config['machine']['location']
-        # Default password will be disabled after random key insertion
-        azure.vm_user = vm_user
-        azure.vm_password = vm_pass
+
+        # VM login username and password according to config
+        azure.vm_user = ac_config['vm']['user']
+        azure.vm_password = ac_config['vm']['password']
     end
 
     config.vm.provider :virtualbox do |v|
@@ -58,33 +66,42 @@ Vagrant.configure(2) do |config|
         v.cpus = ac_config['machine']['cores']
     end
 
-    config.ssh.username = vm_user
-    config.ssh.password = vm_pass
+    # Authentication data for vagran
+    # has to match authentication of azure
+    config.ssh.username = ac_config['vm']['user']
+    config.ssh.password = ac_config['vm']['password']
 
-
+    # Folder of the experiment box
     config.vm.synced_folder ".", "/vagrant/experiment",
         type: "rsync",
         rsync__exclude: ["results", "aclib"]
 
+    # Custom modifications of aclib in the experiment box
     config.vm.synced_folder "aclib", "/vagrant/aclib",
         type: "rsync",
-        owner: vm_user,
+        owner: ac_config['vm']['user'],
         create: true
 
+    # Folder containing the working directories of the experiments.
+    # Is only synced back
     config.vm.synced_folder "results", "/vagrant/results",
         type: "rsync_pull",
         rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"],
         create: true
 
+    # Folder of the ac-cloud box containing all the helper scripts
     config.vm.synced_folder cwd, "/vagrant/accloud",
         type: "rsync"
 
+    # Bashrc to automatically attach to the screen
     config.vm.provision "file",
         source: File.join(cwd, ".bashrc"),
-        destination: File.join("/home", vm_user, ".bashrc")
+        destination: File.join("/home", ac_config['vm']['user'], ".bashrc")
 
+    # Bootstrap script setting up the packages, and starting the aclib-bootstrap
     config.vm.provision "shell", inline: "/vagrant/accloud/install.sh"
 
+    # Define and set up several machines
     if ac_config['machine']['multi-machine'] > 1
         for i in 1..ac_config['machine']['multi-machine']
             config.vm.define "#{ac_config['experiment']['name']}-#{i}"
