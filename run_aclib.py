@@ -66,7 +66,7 @@ class ExperimentRunner(multiprocessing.Process):
 
     def __init__(self, experiment, end_event, install_mutex):
 
-        multiprocessing.Process.__init__(self, name=experiment.['name'])
+        multiprocessing.Process.__init__(self, name=experiment['name'])
 
         print('Initializing experiment {}'.format(self.name))
 
