@@ -50,11 +50,11 @@ Vagrant.configure(2) do |config|
         
         # Specifics about the vm image and configuration
         azure.vm_image = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB"
-        azure.vm_size = ac_config['machine']['azure_category']
+        azure.vm_size = ac_config['machine']['azure']['category']
 
         # Hostname and location of the machine
-        azure.vm_name = ac_config['experiment']['name']
-        azure.vm_location = ac_config['machine']['location']
+        azure.vm_name = ac_config['name']
+        azure.vm_location = ac_config['machine']['azure']['location']
 
         # VM login username and password according to config
         azure.vm_user = ac_config['vm']['user']
@@ -104,7 +104,7 @@ Vagrant.configure(2) do |config|
     # Define and set up several machines
     if ac_config['machine']['multi-machine'] > 1
         for i in 1..ac_config['machine']['multi-machine']
-            config.vm.define "#{ac_config['experiment']['name']}-#{i}"
+            config.vm.define "#{ac_config['name']}-#{i}"
         end
     end
 end

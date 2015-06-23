@@ -6,6 +6,7 @@ import os
 import argparse
 from time import sleep
 import multiprocessing
+from CloudConfig import CloudConfig
 
 
 # Workaround to import aclib modules. Maybe change this by integrating into
@@ -37,23 +38,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('config', type=argparse.FileType('r', 0), default=sys.stdin)
     args = parser.parse_args()
-    config = json.load(args.config)
-    config['experiment'].setdefault('repetition', 1)
-    config['experiment'].setdefault(
-        'config_file', os.path.join(aclib_root, "src", "data", "config.json"))
-    config['experiment'].setdefault('seed', 1)
-    config['experiment'].setdefault('parallel_runs', 1)
-    config['experiment'].setdefault('only_prepare', False)
 
-    total_runs = config['experiment']['repetition']
+    config = CloudConfig()
+    config.load(args.config)
+    config.expand()
 
     run_processes = []
     parallel_run_block = multiprocessing.Semaphore(
-        config['experiment']['parallel_runs'])
+        config.parallel_runs)
     install_mutex = multiprocessing.Lock()
 
-    for i in range(total_runs):
-        run_processes.append(ExperimentRunner(i, config, parallel_run_block, install_mutex))
+    for exp in config.experiments:
+        run_processes.append(ExperimentRunner(exp, config, parallel_run_block, install_mutex))
 
     for process in run_processes:
         process.start()
@@ -68,20 +64,15 @@ def main():
 
 class ExperimentRunner(multiprocessing.Process):
 
-    def __init__(self, counter, config, end_event, install_mutex):
-        run_appedix = ('-{0:02d}'.format(counter)
-                       if config['experiment']['repetition'] != 1
-                       else '')
+    def __init__(self, experiment, end_event, install_mutex):
 
-        multiprocessing.Process.__init__(self, name='{}{}'.format(
-            config['experiment']['name'],
-            run_appedix))
+        multiprocessing.Process.__init__(self, name=experiment.['name'])
 
         print('Initializing experiment {}'.format(self.name))
 
         self.install_mutex = install_mutex
         self.release_on_exit = end_event
-        self.config = config
+        self.config = experiment
 
     configurators = {
         'ParamILS': runner.ParamILSRunner,
@@ -94,19 +85,19 @@ class ExperimentRunner(multiprocessing.Process):
         print('Starting experiment {}'.format(self.name))
 
         with self.install_mutex:
-            installer = install_scenario.Installer(self.config['experiment']['config_file'])
-            installer.install_single_scenario(self.config['experiment']['scenario'])
+            installer = install_scenario.Installer(self.config['config_file'])
+            installer.install_single_scenario(self.config['scenario'])
 
-            self.configurator = self.configurators[self.config['experiment']['configurator']](
-                self.config['experiment']['config_file'],
-                self.config['experiment']['scenario'],
+            self.configurator = self.configurators[self.config['configurator']](
+                os.path.join(aclib_root, self.config['config_file']),
+                self.config['scenario'],
                 aclib_root,
                 os.path.join('results', self.name))
 
-            self.configurator.prepare(self.config['experiment']['seed'])
+            self.configurator.prepare(self.config['seed'])
 
         try:
-            if not self.config['experiment']['only_prepare']:
+            if not self.config['only_prepare']:
                 self.configurator.run_scenario()
         except (KeyboardInterrupt, SystemExit):
             ### handle keyboard interrupt ###

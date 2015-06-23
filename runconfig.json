@@ -3,14 +3,16 @@
         "name": "debug",
         "configurator": "SMAC",
         "scenario": "CSSC_regressiontests_spear",
-        "repetition": 1,
-        "parallel_runs": 1
+        "repetition": 1
     },
+    "parallel_runs": 1,
     "machine": {
         "cores": 1,
         "memory": 1024,
-        "azure_category": "Small",
-        "location": "West Europe",
+        "azure": {
+            "category": "Small",
+            "location": "West Europe"
+        },
         "multi-machine": 1
     }
 }
