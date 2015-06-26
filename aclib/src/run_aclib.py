@@ -25,7 +25,6 @@ def import_aclib(paths):
         if os.path.isdir(path):
             src_path = os.path.join(path, 'src')
             if os.path.isdir(src_path):
-                sys.path.insert(0, src_path)
                 return True
 
     return filter(import_path, paths)[0]
@@ -51,6 +50,7 @@ def main():
         run_processes.append(ExperimentRunner(exp, parallel_run_block, install_mutex))
 
     for process in run_processes:
+        parallel_run_block.acquire()
         process.start()
 
     try:
@@ -80,34 +80,32 @@ class ExperimentRunner(multiprocessing.Process):
     }
 
     def run(self):
-        # Restrict number of parallel run experiments
-        with self.release_on_exit:
+        # Install scenario
+        with self.install_mutex:
+            print('Initializing experiment {}'.format(self.name))
+            config_file = os.path.join(aclib_root, self.config['config_file'])
+            installer = install_scenario.Installer(config_file)
+            installer.install_single_scenario(self.config['scenario'])
 
-            # Install scenario
-            with self.install_mutex:
-                print('Initializing experiment {}'.format(self.name))
-                config_file = os.path.join(aclib_root, self.config['config_file'])
-                installer = install_scenario.Installer(config_file)
-                installer.install_single_scenario(self.config['scenario'])
+            self.configurator = self.configurators[self.config['configurator']](
+                config_file,
+                self.config['scenario'],
+                aclib_root,
+                os.path.join('results', self.name))
 
-                self.configurator = self.configurators[self.config['configurator']](
-                    config_file,
-                    self.config['scenario'],
-                    aclib_root,
-                    os.path.join('results', self.name))
+            self.configurator.prepare(self.config['seed'])
 
-                self.configurator.prepare(self.config['seed'])
-
-            # Run scenario
-            try:
-                if not self.config['only_prepare']:
-                    print('Starting experiment {}'.format(self.name))
-                    self.configurator.run_scenario()
-            except (KeyboardInterrupt, SystemExit):
-                ### handle keyboard interrupt ###
-                self.configurator.cleanup()
-            finally:
-                print('Experiment {} finished'.format(self.name))
+        # Run scenario
+        try:
+            if not self.config['only_prepare']:
+                print('Starting experiment {}'.format(self.name))
+                self.configurator.run_scenario()
+        except (KeyboardInterrupt, SystemExit):
+            ### handle keyboard interrupt ###
+            self.configurator.cleanup()
+        finally:
+            print('Experiment {} finished'.format(self.name))
+            self.release_on_exit.release()
 
 
 if __name__ == '__main__':
