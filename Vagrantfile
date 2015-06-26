@@ -86,7 +86,9 @@ Vagrant.configure(2) do |config|
     # Is only synced back
     config.vm.synced_folder "results", "/vagrant/results",
         type: "rsync_pull",
-        rsync_pull__args: ["--verbose", "--archive", "--delete", "-z"],
+        rsync_pull__args: ["--verbose",
+            "--recursive", "--links", "--times",
+            "--compress", "--ignore-existing"],
         create: true
 
     # Folder of the ac-cloud box containing all the helper scripts
