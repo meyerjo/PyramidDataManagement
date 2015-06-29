@@ -1,13 +1,27 @@
 '''Configuration of an cloud/VM based AClib run'''
 import json
+from itertools import izip_longest
 
 class Config(object):
-    def __init__(self):
-        self.config = dict(default_config)
+    '''Convience object containting the configuration'''
+    def __init__(self, default=DEFAULT_CONFIG):
+        self.config = dict(default)
+
+        for key, value in self.config.items():
+            if type(key) is dict:
+                self.config[key] = Config(value)
+
+    def update(self, other):
+        for key, value in other.config.iteritems():
+            if key in self.config and type(value) is Config:
+                self.config[key].update(value)
+            else:
+                self.config[key] = value
+
 
     def load(self, fp):
-        loaded_dict = json.load(fp)
-        self.config.update(loaded_dict)
+        loaded_dict = Config(json.load(fp))
+        self.update(loaded_dict)
 
     def expand(self):
         single_experiment = self.config.pop('experiment', None)
