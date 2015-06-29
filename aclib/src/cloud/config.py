@@ -1,13 +1,32 @@
 '''Configuration of an cloud/VM based AClib run'''
 import json
 
+
 class Config(object):
-    def __init__(self):
-        self.config = dict(default_config)
+    '''Convience object containting the configuration'''
+    def __init__(self, default=None):
+        self.config = dict(default if default else DEFAULT_CONFIG)
+
+        for key, value in self.config.items():
+            if isinstance(value, dict):
+                self.config[key] = Config(value)
+            if isinstance(value, list):
+                self.config[key] = list(Config(v) for v in value)
+
+    def update(self, other):
+        for key, value in other.config.iteritems():
+            if key in self.config:
+                if isinstance(value, Config):
+                    self.config[key].update(value)
+                elif isinstance(value, list):
+                    self.config[key] += value
+            else:
+                self.config[key] = value
+
 
     def load(self, fp):
-        loaded_dict = json.load(fp)
-        self.config.update(loaded_dict)
+        loaded_dict = Config(json.load(fp))
+        self.update(loaded_dict)
 
     def expand(self):
         single_experiment = self.config.pop('experiment', None)
@@ -18,20 +37,20 @@ class Config(object):
         assert self.config['experiments']
 
         expanded_experiments = []
-        for exp in self.config['experiments']:
-            default = DEFAULT_CONFIG['experiment'].copy()
-            default['name'] = self.config['name']
+        for exp in self.experiments:
+            default = Config(DEFAULT_CONFIG['experiment'])
+            default.config['name'] = self.name
             default.update(exp)
             expanded_experiments.append(default)
 
         multiplied_experiments = []
         for exp in expanded_experiments:
-            if exp['repetition'] == 1:
+            if exp.repetition == 1:
                 multiplied_experiments.append(exp)
-            for i in range(exp['repetition']):
+            for i in range(exp.repetition):
                 instanced_exp = exp.copy()
-                instanced_exp['repetition'] = 1
-                instanced_exp['name'] += '-{0:02d}'.format(i)
+                instanced_exp.config['repetition'] = 1
+                instanced_exp.config['name'] += '-{0:02d}'.format(i)
                 multiplied_experiments.append(instanced_exp)
 
         self.config['experiments'] = multiplied_experiments

@@ -28,7 +28,7 @@ def import_aclib():
             if os.path.isdir(src_path):
                 return True
 
-    return (p for p in aclib_roots if import_path(p))[0]
+    return next(p for p in aclib_roots if import_path(p))
 __aclib_root__ = import_aclib()
 
 
@@ -69,7 +69,7 @@ class ExperimentRunner(multiprocessing.Process):
     '''Run an experiment in AClib in encapsulated in an own process'''
     def __init__(self, experiment, end_event, install_mutex):
 
-        multiprocessing.Process.__init__(self, name=experiment['name'])
+        multiprocessing.Process.__init__(self, name=experiment.name)
 
         self.install_mutex = install_mutex
         self.release_on_exit = end_event
@@ -87,21 +87,21 @@ class ExperimentRunner(multiprocessing.Process):
             print('Initializing experiment {}'.format(self.name))
             config_file = os.path.join(
                 __aclib_root__,
-                self.config['config_file'])
+                self.config.config_file)
             installer = install_scenario.Installer(config_file)
-            installer.install_single_scenario(self.config['scenario'])
+            installer.install_single_scenario(self.config.scenario)
 
-            configurator = self.configurators[self.config['configurator']](
+            configurator = self.configurators[self.config.configurator](
                 config_file,
-                self.config['scenario'],
+                self.config.scenario,
                 __aclib_root__,
                 os.path.join('results', self.name))
 
-            configurator.prepare(self.config['seed'])
+            configurator.prepare(self.config.seed)
 
         # Run scenario
         try:
-            if not self.config['only_prepare']:
+            if not self.config.only_prepare:
                 print('Starting experiment {}'.format(self.name))
                 configurator.run_scenario()
         except (KeyboardInterrupt, SystemExit):
