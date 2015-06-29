@@ -1,3 +1,4 @@
+'''Configuration of an cloud/VM based AClib run'''
 import json
 
 class Config(object):
@@ -14,21 +15,21 @@ class Config(object):
             self.config['experiments'].append(single_experiment)
             self.config['experiment'] = None
 
-        assert(self.config['experiments'])
+        assert self.config['experiments']
 
         expanded_experiments = []
-        for e in self.config['experiments']:
-            default = default_config['experiment'].copy()
+        for exp in self.config['experiments']:
+            default = DEFAULT_CONFIG['experiment'].copy()
             default['name'] = self.config['name']
-            default.update(e)
+            default.update(exp)
             expanded_experiments.append(default)
 
         multiplied_experiments = []
-        for e in expanded_experiments:
-            if e['repetition'] == 1:
-                multiplied_experiments.append(e)
-            for i in range(e['repetition']):
-                instanced_exp = e.copy()
+        for exp in expanded_experiments:
+            if exp['repetition'] == 1:
+                multiplied_experiments.append(exp)
+            for i in range(exp['repetition']):
+                instanced_exp = exp.copy()
                 instanced_exp['repetition'] = 1
                 instanced_exp['name'] += '-{0:02d}'.format(i)
                 multiplied_experiments.append(instanced_exp)
@@ -43,10 +44,11 @@ class Config(object):
 
 
 class Required(object):
+    '''Class indicating that this object is required to be overwritten'''
     def __str__(self):
         raise NotImplementedError
 
-default_config = {
+DEFAULT_CONFIG = {
     "name": Required(),
     "debug": False,
     "parallel_runs": 1,
@@ -54,7 +56,7 @@ default_config = {
         "configurator": Required(),
         "scenario": Required(),
         "repetition": 1,
-        "config_file": "src/data/config.json",  # Issue: How to resolve path? 
+        "config_file": "src/data/config.json",  # Issue: How to resolve path?
         "seed": 1,
         "only_prepare": False
     },
