@@ -28,7 +28,7 @@ def import_aclib():
             if os.path.isdir(src_path):
                 return True
 
-    return (p for p in aclib_roots if import_path(p))[0]
+    return next(p for p in aclib_roots if import_path(p))
 __aclib_root__ = import_aclib()
 
 
@@ -44,6 +44,13 @@ def main():
     config = Config()
     config.load(args.config)
     config.expand()
+    errors = config.check()
+    if errors:
+        errors.insert(0, 'Error in configuration')
+        print('\n'.join(errors))
+        print('Complete configuration:')
+        print(config)
+        sys.exit(1)
 
     run_processes = []
     parallel_run_block = multiprocessing.Semaphore(config.parallel_runs)
