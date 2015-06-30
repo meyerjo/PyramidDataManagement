@@ -44,6 +44,13 @@ def main():
     config = Config()
     config.load(args.config)
     config.expand()
+    errors = config.check()
+    if errors:
+        errors.insert(0, 'Error in configuration')
+        print('\n'.join(errors))
+        print('Complete configuration:')
+        print(config)
+        sys.exit(1)
 
     run_processes = []
     parallel_run_block = multiprocessing.Semaphore(config.parallel_runs)
