@@ -6,6 +6,7 @@ class Config(object):
     '''Convience object containting the configuration'''
     def __init__(self, default=None):
         self.config = dict(default if default else DEFAULT_CONFIG)
+        self.loaded_files = []
 
         for key, value in self.config.items():
             if isinstance(value, dict):
@@ -62,8 +63,8 @@ class Config(object):
                             return errors
         return []
 
-
     def load(self, fp):
+        self.loaded_files.append(fp.name)
         loaded_dict = Config(json.load(fp))
         self.update(loaded_dict)
 
@@ -132,8 +133,8 @@ DEFAULT_CONFIG = {
         "cores": 1,
         "memory": 1024,
         "azure": {
-            "category": "Small",
-            "location": "West Europe"
+            "category": Required(),
+            "location": Required()
         },
         "multi-machine": 1
     }
