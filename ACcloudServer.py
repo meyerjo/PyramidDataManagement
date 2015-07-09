@@ -8,11 +8,27 @@ from pyramid.config import Configurator
 from wsgiref.simple_server import make_server
 from chameleon import PageTemplate
 import hoedown as md
+import csv
 import os
 
 
 def hello_world(request):
     return Response('<body>Hello World</body>')
+
+
+def csv_table(request):
+    relative_path = os.path.join(
+        request.registry.settings['root_dir'],
+        request.matchdict['file'])
+
+    with open(relative_path, 'r') as csv_file:
+        reader = csv.reader(csv_file)
+        table = PageTemplate('''<table>
+            <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
+            </table>''')
+        return Response(table(table=reader))
+
+    return Response('Found csv file')
 
 
 def directory(request):
@@ -35,8 +51,6 @@ def directory(request):
 
 
 def markdown(request):
-    global markdown_css
-    html = 'Parse error'
     markdown_path = request.matchdict['file']
     with open(
         os.path.join(
@@ -724,11 +738,23 @@ def serve(**settings):
     static = static_view(
         '{root_dir}'.format(**config.registry.settings),
         use_subpath=True)
-    config.add_route('markdown', '/{file:([\w\-\_]*\/)*[\w\.]*\.md}')
-    config.add_route('directory', '/{dir:([\w\-\_]*\/)*}')
+
+    dir_path = r'([\w\-\_]*\/)*'
+    file_basename = r'[\w\-\_\.]*'
+
+    config.add_route(
+        'markdown',
+        '/{file:' + dir_path + file_basename + '\.md}')
+    config.add_route(
+        'csv',
+        '/{file:' + dir_path + file_basename + '\.csv}')
+    config.add_route(
+        'directory',
+        '/{dir:' + dir_path + '}')
     config.add_route('static', '/*subpath')
 
     config.add_view(markdown, route_name='markdown')
+    config.add_view(csv_table, route_name='csv')
     config.add_view(directory, route_name='directory')
     config.add_view(static, route_name='static')
 
