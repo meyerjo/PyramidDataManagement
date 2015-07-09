@@ -2,8 +2,10 @@
 
 '''
 
+import logging
 import csv
 import os
+import fnmatch
 
 class AclibResult(object):
     '''Reads and contains results of a Aclib Configuration run'''
@@ -53,14 +55,23 @@ def merge_several_runs(path, scenario_data=None):
     if not scenario_data:
         scenario_data = {}
 
-    path_to_runs = os.path.join('smac-output', 'aclib', 'state-run1', 'runs_and_results-it0.csv')
+    path_to_runs = os.path.join('smac-output', 'aclib', 'state-run1')
 
-    runs = (f for f in os.listdir(path)
-            if os.path.isdir(os.path.join(path, f)))
+    runs = [f for f in os.listdir(path)
+            if os.path.isdir(os.path.join(path, f))]
+
+    if len(runs) == 0:
+        raise Exception('No results have been found in {}'.format(path))
+
+    print('Found results {}'.format('\n'.join(runs)))
 
     for folder in runs:
-        run_result_path = os.path.join(path, folder, path_to_runs)
-        if not os.path.isfile(run_result_path):
+        relative_path = os.path.join(path, folder, path_to_runs)
+        run_results = fnmatch.filter(
+            os.listdir(relative_path),
+            'runs_and_results-it*.csv')        
+
+        if len(run_results) == 0:
             continue
 
         scenario = folder[:-3]
@@ -68,7 +79,8 @@ def merge_several_runs(path, scenario_data=None):
         merged_results = scenario_data.setdefault(scenario, SmacResult())
 
         run_result = SmacResult()
-        run_result.load_runs_and_results(run_result_path)
+        run_result.load_runs_and_results(
+            os.path.join(relative_path, run_results[0]))
         merged_results.merge_with(run_result)
 
     return scenario_data
