@@ -50,7 +50,6 @@ def main():
         print('\n'.join(errors))
         print('Complete configuration:')
         print(config)
-        sys.exit(1)
 
     run_processes = []
     parallel_run_block = multiprocessing.Semaphore(config.parallel_runs)
