@@ -30,12 +30,14 @@ def serve(**settings):
 
     here = lambda p: os.path.join(os.path.abspath(os.path.dirname(__file__)), p)
     static = static_view(here('static'), use_subpath=True)
-    files = static_view(config.registry.settings['root_dir'], use_subpath=True)
+    files = static_view(
+        os.path.abspath(config.registry.settings['root_dir']),
+        use_subpath=True)
 
     config.add_view(
         views.markdown,
         route_name='markdown',
-        renderer=here('static/templates/markdown.pt'))
+        renderer=here('template/markdown.pt'))
     config.add_view(views.csv_table, route_name='csv')
     config.add_view(views.directory, route_name='directory')
     config.add_view(static, route_name='static')

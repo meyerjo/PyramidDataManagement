@@ -1,7 +1,8 @@
 from chameleon import PageTemplate
+from contextlib import contextmanager
 from pyramid.response import Response
-import hoedown
 import csv
+import hoedown
 import os
 
 @contextmanager
@@ -12,7 +13,7 @@ def open_resource(filename, mode="r"):
         raise NotFound
     else:
         try:
-            yield f, None
+            yield f
         finally:
             f.close()
 
