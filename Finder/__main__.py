@@ -33,7 +33,7 @@ settings = {
 if args.debug:
     import pdb
     try:
-        serve(**settings)
+        server.serve(**settings)
     except KeyboardInterrupt:
         pass
     except:

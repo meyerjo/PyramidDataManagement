@@ -4,21 +4,29 @@ import hoedown
 import csv
 import os
 
-
+@contextmanager
+def open_resource(filename, mode="r"):
+    try:
+        f = open(filename, mode)
+    except IOError:
+        raise NotFound
+    else:
+        try:
+            yield f, None
+        finally:
+            f.close()
 
 def csv_table(request):
     relative_path = os.path.join(
         request.registry.settings['root_dir'],
         request.matchdict['file'])
 
-    with open(relative_path, 'r') as csv_file:
+    with open_resource(relative_path) as csv_file:
         reader = csv.reader(csv_file)
         table = PageTemplate('''<table>
             <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
             </table>''')
         return Response(table(table=reader))
-
-    return Response('Found csv file')
 
 
 def directory(request):
@@ -41,13 +49,11 @@ def directory(request):
 
 
 def markdown(request):
-    markdown_path = request.matchdict['file']
-    with open(
-        os.path.join(
-            request.registry.settings['root_dir'],
-            markdown_path), 'r') as markdown_file:
+    markdown_path = os.path.join(
+            request.registry.settings['root_dir'], request.matchdict['file'])
+    with open_resource(markdown_path) as markdown_file:
         source = markdown_file.read()
-    html = hoedown.Markdown(
-        hoedown.HtmlRenderer(hoedown.HTML_TOC),
-        hoedown.EXT_TABLES).render(source)
-    return {"request": request, "html":html}
+        html = hoedown.Markdown(
+            hoedown.HtmlRenderer(hoedown.HTML_TOC),
+            hoedown.EXT_TABLES).render(source)
+        return {"request": request, "html":html}

@@ -16,7 +16,7 @@ requires = [
     'waitress',
     ]
 
-setup(name='AcCloudServer',
+setup(name='AcCloudTools',
       version='0.1',
       description='Tools to conduct and explore ACcloud experiments',
       long_description=README,
