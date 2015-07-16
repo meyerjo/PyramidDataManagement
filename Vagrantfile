@@ -61,6 +61,14 @@ Vagrant.configure(2) do |config|
         azure.vm_password = ac_config['vm']['password']
     end
 
+    config.vm.provider :aws do |aws, overwrite|
+
+        aws.ami = "ami-7747d01e"
+        aws.access_key_id = ac_config['aws']['access_key_id']
+        aws.secret_access_key = ac_config['aws']['secret_access_key']
+        overwrite.vm.box = 'dummy'
+    end
+
     config.vm.provider :virtualbox do |v|
         v.memory = ac_config['machine']['memory']
         v.cpus = ac_config['machine']['cores']
