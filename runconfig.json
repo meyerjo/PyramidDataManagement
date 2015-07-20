@@ -1,6 +1,6 @@
 {
+    "name": "debug",
     "experiment": {
-        "name": "debug",
         "configurator": "SMAC",
         "scenario": "CSSC_regressiontests_spear",
         "repetition": 1

@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
     config.vm.provider "azure"
     config.vm.provider "virtualbox"
 
-    config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
+    config.vm.box = 'dummy'
 
     config.vm.provider :azure do |azure|
 
@@ -63,10 +63,28 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider :aws do |aws, overwrite|
 
-        aws.ami = "ami-7747d01e"
+        # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
+        aws.ami = "ami-d05e75b8"
+
+        # Credential information (User needs ec2 permission role)
         aws.access_key_id = ac_config['aws']['access_key_id']
         aws.secret_access_key = ac_config['aws']['secret_access_key']
-        overwrite.vm.box = 'dummy'
+        aws.instance_type = "t2.micro"
+        aws.security_groups = "launch-wizard-1"
+        aws.tags = {
+            'Name' => ac_config['name']
+        }
+
+        # AWS ubuntu images always have the ubuntu username
+        overwrite.ssh.username = "ubuntu"
+
+        # Key from keypairs has to be used
+        overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
+        aws.keypair_name = ac_config['aws']['keypair_name']
+
+        # Bug in vagrant-aws provisioning
+        # https://github.com/mitchellh/vagrant-aws/issues/357#issuecomment-95677595
+        overwrite.nfs.functional = false
     end
 
     config.vm.provider :virtualbox do |v|
@@ -74,7 +92,7 @@ Vagrant.configure(2) do |config|
         v.cpus = ac_config['machine']['cores']
     end
 
-    # Authentication data for vagran
+    # Authentication data for vagrant
     # has to match authentication of azure
     config.ssh.username = ac_config['vm']['user']
     config.ssh.password = ac_config['vm']['password']
