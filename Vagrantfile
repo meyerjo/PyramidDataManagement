@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
     config.vm.provider "azure"
     config.vm.provider "virtualbox"
 
-    config.vm.box = 'dummy'
+    config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
 
     config.vm.provider :azure do |azure, overwrite|
 
@@ -79,6 +79,7 @@ Vagrant.configure(2) do |config|
 
         # AWS ubuntu images always have the ubuntu username
         overwrite.ssh.username = "ubuntu"
+        overwrite.vm.box = "dummy"
 
         # Key from keypairs has to be used
         overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
