@@ -41,7 +41,7 @@ Vagrant.configure(2) do |config|
 
     config.vm.box = 'dummy'
 
-    config.vm.provider :azure do |azure|
+    config.vm.provider :azure do |azure, overwrite|
 
         # Subscription id and Management certificate for authentication with the azure service
         azure.subscription_id = ac_config['azure']['subscription_id']
@@ -58,7 +58,9 @@ Vagrant.configure(2) do |config|
 
         # VM login username and password according to config
         azure.vm_user = ac_config['vm']['user']
+        overwrite.ssh.username = ac_config['vm']['user']
         azure.vm_password = ac_config['vm']['password']
+        overwrite.ssh.password = ac_config['vm']['password']
     end
 
     config.vm.provider :aws do |aws, overwrite|
@@ -91,11 +93,6 @@ Vagrant.configure(2) do |config|
         v.memory = ac_config['machine']['memory']
         v.cpus = ac_config['machine']['cores']
     end
-
-    # Authentication data for vagrant
-    # has to match authentication of azure
-    config.ssh.username = ac_config['vm']['user']
-    config.ssh.password = ac_config['vm']['password']
 
     # Folder of the experiment box
     config.vm.synced_folder ".", "/vagrant/experiment",
