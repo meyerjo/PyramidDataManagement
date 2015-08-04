@@ -40,8 +40,9 @@ Vagrant.configure(2) do |config|
     config.vm.provider "virtualbox"
 
     config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
+    config.ssh.username = ac_config['vm']['user']
 
-    config.vm.provider :azure do |azure|
+    config.vm.provider :azure do |azure, overwrite|
 
         # Subscription id and Management certificate for authentication with the azure service
         azure.subscription_id = ac_config['azure']['subscription_id']
@@ -59,17 +60,43 @@ Vagrant.configure(2) do |config|
         # VM login username and password according to config
         azure.vm_user = ac_config['vm']['user']
         azure.vm_password = ac_config['vm']['password']
+        overwrite.ssh.password = ac_config['vm']['password']
+    end
+
+    config.vm.provider :aws do |aws, overwrite|
+
+        # Instance settings
+        aws.instance_type = ac_config['machine']['aws']['category']
+        aws.region = ac_config['machine']['aws']['location']
+        aws.tags = {
+            'Name' => ac_config['name']
+        }
+
+        # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
+        aws.ami = "ami-d05e75b8"
+
+        # Credential information (User needs ec2 permission role)
+        aws.access_key_id = ac_config['aws']['access_key_id']
+        aws.secret_access_key = ac_config['aws']['secret_access_key']
+        aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
+        aws.security_groups = "launch-wizard-1"
+
+        # Use the aws base box
+        overwrite.vm.box = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
+
+        # Key from keypairs has to be used
+        overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
+        aws.keypair_name = ac_config['aws']['keypair_name']
+
+        # Bug in vagrant-aws provisioning
+        # https://github.com/mitchellh/vagrant-aws/issues/357#issuecomment-95677595
+        overwrite.nfs.functional = false
     end
 
     config.vm.provider :virtualbox do |v|
         v.memory = ac_config['machine']['memory']
         v.cpus = ac_config['machine']['cores']
     end
-
-    # Authentication data for vagran
-    # has to match authentication of azure
-    config.ssh.username = ac_config['vm']['user']
-    config.ssh.password = ac_config['vm']['password']
 
     # Folder of the experiment box
     config.vm.synced_folder ".", "/vagrant/experiment",
