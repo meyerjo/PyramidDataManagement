@@ -22,7 +22,7 @@ fi
 apt-get install -y default-jre ruby screen
 
 # Disable password authentication
-sed -i.bak -r -e 's/(PasswordAuthentication|ChallengeResponseAuthentication|UsePAM) yes/\1 no/g' /etc/ssh/sshd_config
+sed -i.bak -r -e 's/(PasswordAuthentication|ChallengeResponseAuthentication) yes/\1 no/g' /etc/ssh/sshd_config
 service ssh restart
 
 sudo -u aclib /vagrant/accloud/aclib.sh
