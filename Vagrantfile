@@ -40,6 +40,7 @@ Vagrant.configure(2) do |config|
     config.vm.provider "virtualbox"
 
     config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
+    config.ssh.username = ac_config['vm']['user']
 
     config.vm.provider :azure do |azure, overwrite|
 
@@ -58,7 +59,6 @@ Vagrant.configure(2) do |config|
 
         # VM login username and password according to config
         azure.vm_user = ac_config['vm']['user']
-        overwrite.ssh.username = ac_config['vm']['user']
         azure.vm_password = ac_config['vm']['password']
         overwrite.ssh.password = ac_config['vm']['password']
     end
@@ -77,8 +77,9 @@ Vagrant.configure(2) do |config|
             'Name' => ac_config['name']
         }
 
+        aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
+
         # AWS ubuntu images always have the ubuntu username
-        overwrite.ssh.username = "ubuntu"
         overwrite.vm.box = "dummy"
 
         # Key from keypairs has to be used
