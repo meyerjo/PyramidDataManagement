@@ -65,22 +65,24 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider :aws do |aws, overwrite|
 
+        # Instance settings
+        aws.instance_type = ac_config['machine']['aws']['category']
+        aws.region = ac_config['machine']['aws']['location']
+        aws.tags = {
+            'Name' => ac_config['name']
+        }
+
         # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
         aws.ami = "ami-d05e75b8"
 
         # Credential information (User needs ec2 permission role)
         aws.access_key_id = ac_config['aws']['access_key_id']
         aws.secret_access_key = ac_config['aws']['secret_access_key']
-        aws.instance_type = "t2.micro"
-        aws.security_groups = "launch-wizard-1"
-        aws.tags = {
-            'Name' => ac_config['name']
-        }
-
         aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
+        aws.security_groups = "launch-wizard-1"
 
-        # AWS ubuntu images always have the ubuntu username
-        overwrite.vm.box = "dummy"
+        # Use the aws base box
+        overwrite.vm.box = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
 
         # Key from keypairs has to be used
         overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
