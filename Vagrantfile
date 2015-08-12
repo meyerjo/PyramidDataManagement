@@ -56,6 +56,7 @@ Vagrant.configure(2) do |config|
         # Hostname and location of the machine
         azure.vm_name = ac_config['name']
         azure.vm_location = ac_config['machine']['azure']['location']
+        azure.storage_acct_name  = 'accloud'
 
         # VM login username and password according to config
         azure.vm_user = ac_config['vm']['user']
