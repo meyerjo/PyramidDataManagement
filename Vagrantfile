@@ -46,7 +46,7 @@ Vagrant.configure(2) do |config|
 
         # Subscription id and Management certificate for authentication with the azure service
         azure.subscription_id = ac_config['azure']['subscription_id']
-        azure.mgmt_certificate = File.join(File.dirname(global_config_file), ac_config['azure']['certificate'])
+        azure.mgmt_certificate = ac_config['azure']['certificate']
         azure.mgmt_endpoint = 'https://management.core.windows.net'
         
         # Specifics about the vm image and configuration
