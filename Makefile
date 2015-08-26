@@ -1,12 +1,15 @@
-%.box:
+%.box: .git/COMMIT_EDITMSG
 	git archive --format tar -o $@ HEAD
 	echo "{\"provider\":\"$(basename $@)\"}" > $@.tmp.json
 	tar rf $@ $@.tmp.json --transform "s|$@.tmp.json|metadata.json|"
 	rm $@.tmp.json
 
+metadata.json: aws.box azure.box
+	python metadata.py aws azure > metadata.json
 
-install: box
-	vagrant box add -f --name $(shell git symbolic-ref --short HEAD) ac-cloud.box
+install: metadata.json
+	vagrant box add metadata.json -f --provider aws
+	vagrant box add metadata.json -f --provider azure
 
 clean:
-	rm ac-cloud.box
+	rm -f *.box *.box.tmp.json metadata.json
