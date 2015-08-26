@@ -39,7 +39,6 @@ Vagrant.configure(2) do |config|
     config.vm.provider "azure"
     config.vm.provider "virtualbox"
 
-    config.vm.box = 'https://github.com/MSOpenTech/vagrant-azure/raw/master/dummy.box'
     config.ssh.username = ac_config['vm']['user']
 
     config.vm.provider :azure do |azure, overwrite|
@@ -81,9 +80,6 @@ Vagrant.configure(2) do |config|
         aws.secret_access_key = ac_config['aws']['secret_access_key']
         aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
         aws.security_groups = "launch-wizard-1"
-
-        # Use the aws base box
-        overwrite.vm.box = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
 
         # Key from keypairs has to be used
         overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
