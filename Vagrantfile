@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = ac_config['vm']['user']
 
-    if ac_config['machine'].has_key?('azure')
+    if ac_config.has_key?('azure') and ac_config['machine'].has_key?('azure')
         config.vm.provider :azure do |azure, overwrite|
 
             # Subscription id and Management certificate for authentication with the azure service
@@ -63,7 +63,7 @@ Vagrant.configure(2) do |config|
         end
     end
 
-    if ac_config['machine'].has_key?('aws')
+    if ac_config.has_key?('aws') and ac_config['machine'].has_key?('aws')
         config.vm.provider :aws do |aws, overwrite|
 
             # Instance settings

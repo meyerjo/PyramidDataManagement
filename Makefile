@@ -1,6 +1,7 @@
 %.box: .git/COMMIT_EDITMSG
 	git archive --format tar -o $@ HEAD
 	echo "{\"provider\":\"$(basename $@)\"}" > $@.tmp.json
+	chown gothm:student $@.tmp.json
 	tar rf $@ $@.tmp.json --transform "s|$@.tmp.json|metadata.json|"
 	rm $@.tmp.json
 
