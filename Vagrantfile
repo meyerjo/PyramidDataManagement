@@ -83,8 +83,8 @@ Vagrant.configure(2) do |config|
             aws.security_groups = "launch-wizard-1"
 
             # Key from keypairs has to be used
-            overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
-            aws.keypair_name = ac_config['aws']['keypair_name']
+            overwrite.ssh.private_key_path = ac_config['aws']['keypair']
+            aws.keypair_name = File.basename(ac_config['aws']['keypair'], '.pem')
 
             # Bug in vagrant-aws provisioning
             # https://github.com/mitchellh/vagrant-aws/issues/357#issuecomment-95677595
