@@ -69,9 +69,13 @@ Vagrant.configure(2) do |config|
             # Instance settings
             aws.instance_type = ac_config['machine']['aws']['category']
             aws.region = ac_config['machine']['aws']['location']
-            aws.tags = {
-                'Name' => ac_config['name']
+            tags = {
+                'Name' => ac_config['name'],
+                'Parallel Runs' => ac_config['parallel_runs']
             }
+
+            tags.update(ac_config["experiment"]) unless ac_config["experiment"].nil?
+            aws.tags = tags
 
             # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
             aws.ami = "ami-d05e75b8"
