@@ -36,63 +36,60 @@ end
 
 
 Vagrant.configure(2) do |config|
-    config.vm.provider "azure"
-    config.vm.provider "virtualbox"
 
     config.ssh.username = ac_config['vm']['user']
 
-    config.vm.provider :azure do |azure, overwrite|
+    if ac_config['machine'].has_key?('azure')
+        config.vm.provider :azure do |azure, overwrite|
 
-        # Subscription id and Management certificate for authentication with the azure service
-        azure.subscription_id = ac_config['azure']['subscription_id']
-        azure.mgmt_certificate = ac_config['azure']['certificate']
-        azure.mgmt_endpoint = 'https://management.core.windows.net'
-        
-        # Specifics about the vm image and configuration
-        azure.vm_image = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB"
-        azure.vm_size = ac_config['machine']['azure']['category']
+            # Subscription id and Management certificate for authentication with the azure service
+            azure.subscription_id = ac_config['azure']['subscription_id']
+            azure.mgmt_certificate = ac_config['azure']['certificate']
+            azure.mgmt_endpoint = 'https://management.core.windows.net'
+            
+            # Specifics about the vm image and configuration
+            azure.vm_image = "b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_2_LTS-amd64-server-20150309-en-us-30GB"
+            azure.vm_size = ac_config['machine']['azure']['category']
 
-        # Hostname and location of the machine
-        azure.vm_name = ac_config['name']
-        azure.vm_location = ac_config['machine']['azure']['location']
-        azure.storage_acct_name  = 'accloud'
+            # Hostname and location of the machine
+            azure.vm_name = ac_config['name']
+            azure.vm_location = ac_config['machine']['azure']['location']
+            azure.storage_acct_name  = 'accloud'
 
-        # VM login username and password according to config
-        azure.vm_user = ac_config['vm']['user']
-        azure.vm_password = ac_config['vm']['password']
-        overwrite.ssh.password = ac_config['vm']['password']
+            # VM login username and password according to config
+            azure.vm_user = ac_config['vm']['user']
+            azure.vm_password = ac_config['vm']['password']
+            overwrite.ssh.password = ac_config['vm']['password']
+        end
     end
 
-    config.vm.provider :aws do |aws, overwrite|
+    if ac_config['machine'].has_key?('aws')
+        config.vm.provider :aws do |aws, overwrite|
 
-        # Instance settings
-        aws.instance_type = ac_config['machine']['aws']['category']
-        aws.region = ac_config['machine']['aws']['location']
-        aws.tags = {
-            'Name' => ac_config['name']
-        }
+            # Instance settings
+            aws.instance_type = ac_config['machine']['aws']['category']
+            aws.region = ac_config['machine']['aws']['location']
+            aws.tags = {
+                'Name' => ac_config['name']
+            }
 
-        # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
-        aws.ami = "ami-d05e75b8"
+            # Image ID ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150325
+            aws.ami = "ami-d05e75b8"
 
-        # Credential information (User needs ec2 permission role)
-        aws.access_key_id = ac_config['aws']['access_key_id']
-        aws.secret_access_key = ac_config['aws']['secret_access_key']
-        aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
-        aws.security_groups = "launch-wizard-1"
+            # Credential information (User needs ec2 permission role)
+            aws.access_key_id = ac_config['aws']['access_key_id']
+            aws.secret_access_key = ac_config['aws']['secret_access_key']
+            aws.user_data = "#cloud-config\nsystem_info:\n  default_user:\n    name: #{ac_config['vm']['user']}"
+            aws.security_groups = "launch-wizard-1"
 
-        # Key from keypairs has to be used
-        overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
-        aws.keypair_name = ac_config['aws']['keypair_name']
+            # Key from keypairs has to be used
+            overwrite.ssh.private_key_path = "../#{ac_config['aws']['keypair_name']}.pem"
+            aws.keypair_name = ac_config['aws']['keypair_name']
 
-        # Bug in vagrant-aws provisioning
-        # https://github.com/mitchellh/vagrant-aws/issues/357#issuecomment-95677595
-        overwrite.nfs.functional = false
-    end
-
-    config.vm.provider :virtualbox do |v|
-        v.memory = ac_config['machine']['memory']
-        v.cpus = ac_config['machine']['cores']
+            # Bug in vagrant-aws provisioning
+            # https://github.com/mitchellh/vagrant-aws/issues/357#issuecomment-95677595
+            overwrite.nfs.functional = false
+        end
     end
 
     # Folder of the experiment box
