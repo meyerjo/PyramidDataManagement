@@ -127,11 +127,4 @@ Vagrant.configure(2) do |config|
 
     # Bootstrap script setting up the packages, and starting the aclib-bootstrap
     config.vm.provision "shell", inline: "/vagrant/accloud/install.sh"
-
-    # Define and set up several machines
-    if ac_config['machine']['multi-machine'] > 1
-        for i in 1..ac_config['machine']['multi-machine']
-            config.vm.define "#{ac_config['name']}-#{i}"
-        end
-    end
 end
