@@ -20,13 +20,13 @@ echo "#######################"
 echo "# Starting experiment #"
 echo "#######################"
 
-cd /vagrant
+cd /vagrant/results
 
 grep  "\"debug\"\s*:\s*true" < $EXP_DIR/runconfig.json
 if [ $? -eq 0 ]; then
     screen -d -m python -m pdb $ACLIB_DIR/src/run_aclib.py $EXP_DIR/runconfig.json
 else
-    screen -d -m -L sh -c '$ACLIB_DIR/src/run_aclib.py $EXP_DIR/runconfig.json; sudo poweroff'
+    screen -d -m -L sh -c "$ACLIB_DIR/src/run_aclib.py $EXP_DIR/runconfig.json; sudo poweroff"
 fi
 echo "##################################"
 echo "# Experiment started.            #"

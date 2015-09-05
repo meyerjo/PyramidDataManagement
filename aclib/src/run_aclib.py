@@ -101,7 +101,7 @@ class ExperimentRunner(multiprocessing.Process):
                 config_file,
                 self.config.scenario,
                 __aclib_root__,
-                os.path.join('results', self.name))
+                self.name)
 
             if self.config.validate and self.config.validate.mode == "TIME":
                 configurator.prepare(
