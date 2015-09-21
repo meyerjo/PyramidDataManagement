@@ -17,7 +17,15 @@ def main():
     results = csv.reader(every_second_line)
     runtimes = np.array([float(column[1]) for column in results])
 
-    plt.hist(runtimes, 50)
+    fig = plt.figure()
+    histogram = fig.add_subplot(111)
+
+    histogram.hist(
+        runtimes,
+        bins=50)
+    histogram.xaxis.set_label_text('runtime [s]')
+    histogram.yaxis.set_label_text('#runs')
+
     plt.title(os.path.basename(args.responses.name))
     if args.save:
         path = args.responses.name + '.png'
