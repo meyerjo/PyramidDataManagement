@@ -46,7 +46,7 @@ def directory(request):
     ''')
     return Response(response(
         dir=request.matchdict['dir'],
-        items=visible_items))
+        items=sorted(visible_items)))
 
 
 def markdown(request):
