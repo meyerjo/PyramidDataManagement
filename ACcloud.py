@@ -7,6 +7,7 @@ import sys
 import tarfile
 import subprocess
 import logging
+import glob
 from config import Config
 
 
@@ -18,13 +19,12 @@ class Run(object):
 
         if not path.isdir(boxpath):
             os.makedirs(boxpath)
-        
+
         try:
             json = open(path.join(boxpath, 'runconfig.json'), 'r')
             self.config.load(json)
         except IOError:
             pass
-
 
     def is_archived(self):
         archive_path = path.join(self.path, 'results.tar.gz')
@@ -62,6 +62,10 @@ class Run(object):
         self.call('ssh')
 
     def pull(self):
+        machines = map(os.path.basename, glob.glob('.vagrant/machines/*'))
+        if len(machines) > 1:
+            for machine in machines:
+                self.call('ssh', machine, '-c', 'for folder in /vagrant/results/*; do mv $folder $folder-{0}; done'.format(machine))
         self.call('rsync-pull')
 
     def archive(self, compress=None):
@@ -101,8 +105,14 @@ class Run(object):
                 print self.config
 
     def call(self, *args):
-        return subprocess.check_call(
-            ['vagrant', '--machine-readable'] + list(args), cwd=self.path)
+        arguments = list(args)
+        arguments.insert(0, 'vagrant')
+        result = 'Error in function call {}'.format(' '.join(args))
+        try:
+            result = subprocess.check_call(arguments, cwd=self.path)
+            return result
+        except subprocess.CalledProcessError:
+            return result
 
 
 def main():
@@ -139,6 +149,14 @@ def main():
     init = command.add_parser('init')
     init.set_defaults(func=Run.create)
     init.set_defaults(sub=init)
+
+    pull = command.add_parser('pull')
+    pull.set_defaults(func=Run.pull)
+    pull.set_defaults(sub=pull)
+
+    attach = command.add_parser('attach')
+    attach.set_defaults(func=Run.attach)
+    attach.set_defaults(sub=attach)
 
     args = parser.parse_args()
 
