@@ -16,7 +16,8 @@ def runtimeFromMergedValidations(files):
 def validationResultPaths(path):
     resultpaths = [
     'results/*/validate-inc/*Results*.csv',
-    'validate-test/validationResults-tunertimecsscWorkerValid_*.csv']
+    'validate-test/validationResults-tunertimecsscWorkerValid_*.csv',
+    '*/SMAC/run-*/validate-inc/validationResults-traj-run-*-walltimelocal.csv']
  
     return [f for val in resultpaths for f in glob.glob(join(path, val))]
 
