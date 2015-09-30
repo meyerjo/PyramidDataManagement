@@ -8,6 +8,7 @@ import argparse
 from scipy.stats import lognorm, norm, cumfreq
 from math import log
 
+color = [(0.9375, 0.63671875, 0.99609375), (0.0, 0.45703125, 0.859375), (0.59765625, 0.24609375, 0.0), (0.296875, 0.0, 0.359375), (0.09765625, 0.09765625, 0.09765625), (0.0, 0.359375, 0.19140625), (0.16796875, 0.8046875, 0.28125), (0.99609375, 0.796875, 0.59765625), (0.5, 0.5, 0.5), (0.578125, 0.99609375, 0.70703125), (0.55859375, 0.484375, 0.0), (0.61328125, 0.796875, 0.0), (0.7578125, 0.0, 0.53125), (0.0, 0.19921875, 0.5), (0.99609375, 0.640625, 0.01953125), (0.99609375, 0.65625, 0.73046875), (0.2578125, 0.3984375, 0.0), (0.99609375, 0.0, 0.0625), (0.3671875, 0.94140625, 0.9453125), (0.0, 0.59765625, 0.55859375), (0.875, 0.99609375, 0.3984375), (0.453125, 0.0390625, 0.99609375), (0.59765625, 0.0, 0.0), (0.99609375, 0.99609375, 0.5), (0.99609375, 0.99609375, 0.0), (0.99609375, 0.3125, 0.01953125)]
 def runtimeFromMergedValidations(files):
     return np.array([np.genfromtxt(f, delimiter=',', skip_header=True, usecols=(2)) for f in files])
 
@@ -50,7 +51,7 @@ def ecdf(data, fig, color, name):
     y = np.array(clone(space)[1:-1])
 
     
-    plt.plot(x, y, color + 'x-', label='ECDF %s' % name)
+    plt.plot(x, y, 'x-', color=color, label='ECDF %s' % name)
 
     return x, y
 
@@ -91,7 +92,6 @@ if args.plot:
     fig2 = plt.figure()
     fig2.xlabel = 'Time (ms)'
     fig2.ylabel = 'CDF'
-    color = list('bgrcmyb')
 
 
 
@@ -105,7 +105,7 @@ if args.plot:
         x = np.logspace(log(minimum, 10)-0.5, log(maximum, 10)+0.5, 200)
         p.set_xscale('log', basex = 10)
         params = fit(dist, d)
-        p.plot(x, dist.cdf(x, *params), color, label='logN %s' % name)
+        p.plot(x, dist.cdf(x, *params), '-', color=color, label='logN %s' % name)
         
         factor = compareTwoSets(data[0], d, dist)
         print('%s/%s: %1.2fx' % (name, args.files[0], factor))
