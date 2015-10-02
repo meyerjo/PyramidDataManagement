@@ -7,7 +7,7 @@ IGNORE_ERROR=true
 SILENT=/dev/null
 
 SCRIPT_DIR=/vagrant/accloud
-ACLIB_DIR=/vagrant/aclib
+ACLIB_DIR=/mnt/aclib
 EXP_DIR=/vagrant/experiment
 
 # Download version if newer

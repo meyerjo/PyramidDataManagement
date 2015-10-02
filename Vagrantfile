@@ -102,7 +102,7 @@ Vagrant.configure(2) do |config|
         rsync__exclude: ["results", "aclib"]
 
     # Custom modifications of aclib in the experiment box
-    config.vm.synced_folder "aclib", "/vagrant/aclib",
+    config.vm.synced_folder "aclib", "/mnt/aclib",
         type: "rsync",
         owner: ac_config['vm']['user'],
         create: true
