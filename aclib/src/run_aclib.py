@@ -10,26 +10,7 @@ from cloud.config import Config
 import install_scenario  # pylint: disable=f0401
 import run_scenario as runner  # pylint: disable=f0401
 
-
-def import_aclib():
-    '''Workaround to import aclib modules. Maybe change this by integrating into
-    aclib src or packaging aclib'''
-    aclib_roots = [
-        "../../aclib",
-        "../../../aclib",
-        "/home/aclib/aclib",
-        "/vagrant/aclib"
-    ]
-
-    def import_path(path):
-        '''Predicate to check and import an aclib path'''
-        if os.path.isdir(path):
-            src_path = os.path.join(path, 'src')
-            if os.path.isdir(src_path):
-                return True
-
-    return next(p for p in aclib_roots if import_path(p))
-__aclib_root__ = import_aclib()
+__aclib_root__ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 
 def main():
