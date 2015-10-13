@@ -106,7 +106,7 @@ class Config(object):
 
 class Required(Config):
     '''Class indicating that this object is required to be overwritten'''
-    
+
     def __init__(self):
         self.config = {}
 
@@ -126,7 +126,17 @@ DEFAULT_CONFIG = {
         "repetition": 1,
         "config_file": "src/data/config.json",  # Issue: How to resolve path?
         "seed": 1,
-        "only_prepare": False
+        "only_prepare": False,
+        "validate": False
+        # "validate": {
+        #     "mode": "INC",
+        #     "set": "TEST",
+        #     "time": {
+        #         "min": 0,
+        #         "max": -1,
+        #         "factor": 2
+        #     }
+        # }
     },
     "experiments": [],
     "machine": {

@@ -103,13 +103,25 @@ class ExperimentRunner(multiprocessing.Process):
                 __aclib_root__,
                 os.path.join('results', self.name))
 
-            configurator.prepare(self.config.seed)
+            if self.config.validate and self.config.validate.mode == "TIME":
+                configurator.prepare(
+                    self.config.seed,
+                    max_timestamp=self.config.validate.max,
+                    min_timestamp=self.config.validate.min,
+                    mult_factor=self.config.validate.factor)
+            else:
+                configurator.prepare(self.config.seed)
 
         # Run scenario
         try:
             if not self.config.only_prepare:
                 print('Starting experiment {}'.format(self.name))
                 configurator.run_scenario()
+                if self.config.validate:
+                    print('Starting validation {}'.format(self.name))
+                    self.config.run_validate(
+                        mode=self.config.validate.mode,
+                        val_set=self.config.validate.set)
         except (KeyboardInterrupt, SystemExit):
             configurator.cleanup()
         finally:
