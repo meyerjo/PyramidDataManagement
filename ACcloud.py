@@ -8,7 +8,20 @@ import tarfile
 import subprocess
 import logging
 import glob
+import json
 from config import Config
+from parser.run_parser import CMD_Parser
+
+# Patch to allow to add existing parsers as subparsers to an ArgumentParser
+# Inspired by https://bugs.python.org/issue17204#msg187226
+class ExtendableSubparser(argparse.ArgumentParser):
+    def __init__(self, **kwargs):
+        
+        super(ExtendableSubparser,self).__init__()
+        existing_parser = kwargs.get('parser')
+        if existing_parser:
+            for k,v in vars(kwargs['parser']).items():
+                setattr(self,k,v)
 
 
 class Run(object):
@@ -40,17 +53,33 @@ class Run(object):
         if results_exist and not archive_exists:
             return False
 
-    def create(self):
+    def create(self, **kwargs):
         if self.config.loaded_files:
             logging.critical('Experiment already initialized')
             return
 
-        self.call('init', 'master', '-m')
-        result = self.start()
+        config = {
+            'name': os.path.basename(self.path)
+        }
 
-        if not result.split(',')[3] == 'Vagrant::Errors::ConfigInvalid':
-            logging.error(
-                'Error in the creation of vagrant box: {}').format(result[4])
+        config['experiment'] = {
+            'scenario': kwargs['scenario'],
+            'configurator': kwargs['configurator'],
+            'config_file': kwargs['config_file'],
+            'seed': kwargs['seed'],
+            'only_prepare': kwargs['only_validate']
+        }
+
+        runconfig_file = open(path.join(self.path, 'runconfig.json'), 'w')
+        json.dump(config, runconfig_file, sort_keys=True, indent=2)
+
+        with open(path.join(self.path, 'Vagrantfile'), 'w') as vagrantfile:
+            vagrantfile.write('''
+Vagrant.configure(2) do |config|
+  config.vm.box = "ac-cloud"
+end
+''')
+
 
     def status(self):
         raise NotImplementedError
@@ -146,7 +175,9 @@ def main():
     check.add_argument('--verbose', '-v',
                        action='store_true')
 
-    init = command.add_parser('init')
+    command._parser_class = ExtendableSubparser
+    cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
+    init = command.add_parser('init', parser=cmd_parser.parser)
     init.set_defaults(func=Run.create)
     init.set_defaults(sub=init)
 
