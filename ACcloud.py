@@ -59,33 +59,55 @@ class Run(object):
             return
 
         config = {
-            'name': os.path.basename(self.path)
+            'name': os.path.basename(self.path),
+            'parallel_runs': kwargs['n_per_job'],
+            'experiment': {
+                'scenario': kwargs['scenario'],
+                'configurator': kwargs['configurator'],
+                'config_file': kwargs['config_file'],
+                'seed': kwargs['seed'],
+                'only_prepare': kwargs['only_validate'],
+                'repetition': kwargs['n_runs'],
+            },
+            'machine': {
+                'provider': {
+                    'name': kwargs['provider'],
+                    'instance': kwargs['instance']
+                },
+                'multi-machine': kwargs['multi_machine']
+            }
         }
 
-        config['experiment'] = {
-            'scenario': kwargs['scenario'],
-            'configurator': kwargs['configurator'],
-            'config_file': kwargs['config_file'],
-            'seed': kwargs['seed'],
-            'only_prepare': kwargs['only_validate']
-        }
+        if kwargs['instance']:
+            config['machine']['instance'] = kwargs['instance']
+        else:
+            config['machine']['cores'] = kwargs['job_cores']
+            config['machine']['memory'] = kwargs['job_memory']
 
         runconfig_file = open(path.join(self.path, 'runconfig.json'), 'w')
         json.dump(config, runconfig_file, sort_keys=True, indent=2)
 
+        multi_machine_config = '\n'.join('config.vm.define "%d"' % i 
+            for i in range(kwargs['multi_machine']))
+
         with open(path.join(self.path, 'Vagrantfile'), 'w') as vagrantfile:
             vagrantfile.write('''
 Vagrant.configure(2) do |config|
-  config.vm.box = "ac-cloud"
+  config.vm.box = "ac-cloud"%s
 end
-''')
+''' % ('\n' + multi_machine_config) if kwargs['multi_machine'] > 1 else '')
 
+        self.config = Config(config)
 
     def status(self):
         raise NotImplementedError
 
+    # def run(self, **kwargs):
+    #     self.init(**kwargs)
+    #     self.start()
+
     def start(self):
-        return self.call('up', '--provider', 'azure')
+        return self.call('up', '--provider', self.config.provider.name)
 
     def attach(self):
         self.call('ssh')
@@ -175,15 +197,36 @@ def main():
     check.add_argument('--verbose', '-v',
                        action='store_true')
 
+    def add_cloud_arguments(parser):
+        cloud = parser.add_argument_group('cloud')
+        cloud.add_argument('--provider', required=True)
+        cloud.add_argument('--instance', '-i')
+        cloud.add_argument("-n", "--number_of_runs", dest="n_runs", default=1, type=int, help="number of independent runs")
+        cloud.add_argument("--n_per_job", dest="n_per_job", default=1, type=int, help="number of runs per job")
+        cloud.add_argument("--job_cores", dest="job_cores", default=1, type=int, help="number of cores per configuration job")
+        cloud.add_argument("--job_memory", dest="job_memory", default=2000, type=int, help="memory per *core* (in MB) for a job on *orcinus* (if cluster supports this limit)")
+        cloud.add_argument("--multi_machine", default=1, type=int)
+
     command._parser_class = ExtendableSubparser
     cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
     init = command.add_parser('init', parser=cmd_parser.parser)
     init.set_defaults(func=Run.create)
     init.set_defaults(sub=init)
+    add_cloud_arguments(init)
+
+    # run = command.add_parser('run', parser=cmd_parser.parser)
+    # run.set_defaults(func=Run.run)
+    # run.set_defaults(sub=run)
+    # add_cloud_arguments(run)
+
 
     pull = command.add_parser('pull')
     pull.set_defaults(func=Run.pull)
     pull.set_defaults(sub=pull)
+
+    start = command.add_parser('start')
+    start.set_defaults(func=Run.start)
+    start.set_defaults(sub=start)
 
     attach = command.add_parser('attach')
     attach.set_defaults(func=Run.attach)

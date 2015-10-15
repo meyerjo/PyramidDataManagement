@@ -132,7 +132,8 @@ DEFAULT_CONFIG = {
     "machine": {
         "cores": 1,
         "memory": 1024,
-        "azure": {
+        "provider": {
+            "name": Required(),
             "category": Required(),
             "location": Required()
         },
