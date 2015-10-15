@@ -13,27 +13,27 @@ required_plugins.each do |plugin|
 end
 
 # Load ACcloud config files
-global_config_file = '../credentials.json'
-local_config_file = 'runconfig.json'
+config_file = 'runconfig.json'
 cwd = File.dirname(File.absolute_path(__FILE__))
 
 # Parse config files
-begin
-local_config = JSON.parse(File.read(local_config_file))
-global_config = JSON.parse(File.read(global_config_file))
-ac_config = local_config.merge(global_config)
+def load_config_file(file, included)
+    abs_file = File.dirname(File.absolute_path(file))
+    unless included.includes? abs_file
+        included << abs_file
+        this_config = JSON.parse(File.read(file))
 
-# If config file in experiment box does not exist, copy default file
-rescue Errno::ENOENT => e
-    if not File.exists?(global_config_file)
-        FileUtils.cp(File.join(cwd, File.basename(global_config_file)), File.join(Dir.pwd, global_config_file))
+        included_config = {}
+        this_config['include'].each do |include_file|
+            included_config.merge! load_config_file(include_file, included)
+        end
+        return included_config.merge(this_config)
+    else
+        return {}
     end
-    if not File.exists?(local_config_file)
-        FileUtils.cp(File.join(cwd, local_config_file), File.join(Dir.pwd, local_config_file))
-    end
-    raise Vagrant::Errors::ConfigInvalid, errors: "#{e.message} - Template config file has been inserted"
 end
 
+ac_config = load_config_file(config_file, [])
 
 Vagrant.configure(2) do |config|
 
