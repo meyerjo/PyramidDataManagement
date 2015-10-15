@@ -18,5 +18,6 @@
             "location": "us-east-1"
         },
         "multi-machine": 1
-    }
+    },
+    "include": ["~/.accloud/credentials.json"]
 }

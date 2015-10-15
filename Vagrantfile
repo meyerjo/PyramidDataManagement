@@ -18,13 +18,14 @@ cwd = File.dirname(File.absolute_path(__FILE__))
 
 # Parse config files
 def load_config_file(file, included)
-    abs_file = File.dirname(File.absolute_path(file))
-    unless included.includes? abs_file
+    abs_file = File.expand_path(file)
+
+    unless included.include? abs_file
         included << abs_file
-        this_config = JSON.parse(File.read(file))
+        this_config = JSON.parse(File.read(abs_file))
 
         included_config = {}
-        this_config['include'].each do |include_file|
+        (this_config['include'] || []).each do |include_file|
             included_config.merge! load_config_file(include_file, included)
         end
         return included_config.merge(this_config)
