@@ -3,7 +3,7 @@
 import os
 import argparse
 import webbrowser
-import server
+from accloud.finder import server
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

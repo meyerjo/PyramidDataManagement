@@ -16,8 +16,8 @@ requires = [
     'waitress',
     ]
 
-setup(name='AcCloudTools',
-      version='0.1',
+setup(name='accloud',
+      version='0.2',
       description='Tools to conduct and explore ACcloud experiments',
       long_description=README,
       classifiers=[
@@ -30,8 +30,12 @@ setup(name='AcCloudTools',
       author_email='gothm@tf.uni-freiburg.de',
       url='https://github.com/AC-cloud/tools',
       keywords='web pyramid pylons',
-      packages=find_packages(),
+      packages=['accloud'],
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
-      )
+      entry_points={
+        'console_scripts': ['boxplot-validations=accloud.plots.boxplot_validations:main']
+      },
+      scripts=['bin/Finder', 'bin/ACcloud']
+)

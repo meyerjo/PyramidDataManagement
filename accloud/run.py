@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-import argparse
 import os
 import os.path as path
 import shutil
@@ -10,31 +8,22 @@ import logging
 import glob
 import json
 from config import Config
-from parser.run_parser import CMD_Parser
-
-# Patch to allow to add existing parsers as subparsers to an ArgumentParser
-# Inspired by https://bugs.python.org/issue17204#msg187226
-class ExtendableSubparser(argparse.ArgumentParser):
-    def __init__(self, **kwargs):
-        
-        super(ExtendableSubparser,self).__init__()
-        existing_parser = kwargs.get('parser')
-        if existing_parser:
-            for k,v in vars(kwargs['parser']).items():
-                setattr(self,k,v)
 
 
 class Run(object):
     '''Representation of an ACcloud vagrant box'''
     def __init__(self, boxpath):
         self.config = Config()
-        self.path = boxpath
+        if boxpath is None:
+            self.path = os.getcwd()
+        else:
+            self.path = boxpath
 
-        if not path.isdir(boxpath):
-            os.makedirs(boxpath)
+        if not path.isdir(self.path):
+            os.makedirs(self.path)
 
         try:
-            json = open(path.join(boxpath, 'runconfig.json'), 'r')
+            json = open(path.join(self.path, 'runconfig.json'), 'r')
             self.config.load(json)
         except IOError:
             pass
@@ -164,89 +153,3 @@ end
             return result
         except subprocess.CalledProcessError:
             return result
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--debug', action='store_true')
-    parser.add_argument('--box',
-                        type=str,
-                        default=os.getcwd(),
-                        help='Path to the experiment folder (a vagrant box)')
-
-    parser.add_argument('--version', action='version', version='test')
-
-    command = parser.add_subparsers()
-
-    archive = command.add_parser('archive')
-    archive.set_defaults(func=Run.archive)
-    archive.set_defaults(sub=archive)
-    archive.add_argument('--compress', '-c',
-                         type=bool,
-                         dest='compress',
-                         help='Force compressing the experiment box')
-    archive.add_argument('--decompress', '-d',
-                         action='store_const',
-                         const=False,
-                         dest='compress',
-                         help='Force extract the experiment box')
-
-    check = command.add_parser('check')
-    check.set_defaults(func=Run.check)
-    check.set_defaults(sub=check)
-    check.add_argument('--verbose', '-v',
-                       action='store_true')
-
-    def add_cloud_arguments(parser):
-        cloud = parser.add_argument_group('cloud')
-        cloud.add_argument('--provider', required=True)
-        cloud.add_argument('--instance', '-i')
-        cloud.add_argument("-n", "--number_of_runs", dest="n_runs", default=1, type=int, help="number of independent runs")
-        cloud.add_argument("--n_per_job", dest="n_per_job", default=1, type=int, help="number of runs per job")
-        cloud.add_argument("--job_cores", dest="job_cores", default=1, type=int, help="number of cores per configuration job")
-        cloud.add_argument("--job_memory", dest="job_memory", default=2000, type=int, help="memory per *core* (in MB) for a job on *orcinus* (if cluster supports this limit)")
-        cloud.add_argument("--multi_machine", default=1, type=int)
-
-    command._parser_class = ExtendableSubparser
-    cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
-    init = command.add_parser('init', parser=cmd_parser.parser)
-    init.set_defaults(func=Run.create)
-    init.set_defaults(sub=init)
-    add_cloud_arguments(init)
-
-    # run = command.add_parser('run', parser=cmd_parser.parser)
-    # run.set_defaults(func=Run.run)
-    # run.set_defaults(sub=run)
-    # add_cloud_arguments(run)
-
-
-    pull = command.add_parser('pull')
-    pull.set_defaults(func=Run.pull)
-    pull.set_defaults(sub=pull)
-
-    start = command.add_parser('start')
-    start.set_defaults(func=Run.start)
-    start.set_defaults(sub=start)
-
-    attach = command.add_parser('attach')
-    attach.set_defaults(func=Run.attach)
-    attach.set_defaults(sub=attach)
-
-    args = parser.parse_args()
-
-    subargs = vars(args.sub.parse_known_args()[0])
-    subargs.pop('func')
-    subargs.pop('sub')
-
-    args.func(Run(args.box), **subargs)
-
-
-if __name__ == '__main__':
-    if '--debug' in sys.argv:
-        try:
-            main()
-        except:
-            import pdb
-            pdb.post_mortem()
-    else:
-        main()
