@@ -9,14 +9,7 @@
     "machine": {
         "cores": 1,
         "memory": 1024,
-        "azure": {
-            "category": "Small",
-            "location": "West Europe"
-        },
-        "aws": {
-            "category": "t2.micro",
-            "location": "us-east-1"
-        },
+        "provider": null,
         "multi-machine": 1
     },
     "include": ["~/.accloud/credentials.json"]

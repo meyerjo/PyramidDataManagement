@@ -17,6 +17,14 @@ config_file = 'runconfig.json'
 cwd = File.dirname(File.absolute_path(__FILE__))
 
 # Parse config files
+
+class ::Hash
+    def deep_merge(second)
+        merger = proc { |key, v1, v2| Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2 }
+        self.merge(second, &merger)
+    end
+end
+
 def load_config_file(file, included)
     abs_file = File.expand_path(file)
 
@@ -26,9 +34,9 @@ def load_config_file(file, included)
 
         included_config = {}
         (this_config['include'] || []).each do |include_file|
-            included_config.merge! load_config_file(include_file, included)
+            included_config = included_config.deep_merge load_config_file(include_file, included)
         end
-        return included_config.merge(this_config)
+        return included_config.deep_merge(this_config)
     else
         return {}
     end
@@ -40,7 +48,7 @@ Vagrant.configure(2) do |config|
 
     config.ssh.username = ac_config['vm']['user']
 
-    if ac_config.has_key?('azure') and ac_config['machine'].has_key?('azure')
+    if ac_config.has_key?('azure') and ac_config['machine']['provider'] == 'azure'
         config.vm.provider :azure do |azure, overwrite|
 
             # Subscription id and Management certificate for authentication with the azure service
@@ -64,7 +72,7 @@ Vagrant.configure(2) do |config|
         end
     end
 
-    if ac_config.has_key?('aws') and ac_config['machine'].has_key?('aws')
+    if ac_config.has_key?('aws') and ac_config['machine']['provider'] == 'aws'
         config.vm.provider :aws do |aws, overwrite|
 
             # Instance settings
