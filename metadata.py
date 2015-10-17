@@ -16,7 +16,7 @@ METADATA_TMPL = {
     "name": "ac-cloud",
     "description": "",
     "versions": [{
-        "version": "0",
+        "version": "0.2.0",
         "providers": []
     }]
 }
