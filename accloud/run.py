@@ -43,6 +43,55 @@ class Run(object):
         if results_exist and not archive_exists:
             return False
 
+    def link(self):
+        files = []
+
+        for experiment in self.config.experiments:
+            with open(os.path.join(
+                      self.config.aclib_root,
+                      experiment.config_file)) as config_file:
+                aclib_config = json.load(config_file)
+                scenario = aclib_config['scenarios'][experiment.scenario]
+                files.append(scenario['pcs'])
+                files.append(scenario['scenario'])
+
+                instance = aclib_config['instances'][scenario.instances]
+                files.append(os.path.join(
+                    'instances',
+                    instance['problem_type'],
+                    'data',
+                    scenario['instances']))
+                files.append(os.path.join(
+                    'instances',
+                    instance['problem_type'],
+                    'sets',
+                    scenario['instances']))
+
+                algorithm = aclib_config['algorithms'][scenario.algorithm]
+                files.append(os.path.join(
+                    'target_algorithms',
+                    algorithm['problem_type'][0]
+                        if len(algorithm['problem_type']) == 1 
+                        else 'multi_problem',
+                    scenario['algorithm']))
+
+        def create_link(directory):
+            target = os.path.split(os.path.join(self.path, 'aclib', directory))
+            os.makedirs(self.path.dirname(target))
+            os.symlink(
+                os.path.join(self.config.aclib_root, directory),
+                os.path.join(folders, symlink))
+
+        # Delete links to subfolders of other links
+        essential_links = []
+        for f in sorted(files):
+            if essential_links and f.startswith(essential_links[-1]):
+                continue
+            else essential_links.append(f)
+
+        for link in essential_links:
+            create_link(link)
+
     def create(self, **kwargs):
         if self.config.loaded_files:
             logging.critical('Experiment already initialized')
