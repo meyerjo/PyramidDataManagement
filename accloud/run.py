@@ -3,6 +3,7 @@ import os.path as path
 import shutil
 import sys
 import tarfile
+import datetime
 import subprocess
 import logging
 import glob
@@ -63,7 +64,8 @@ class Run(object):
                 kwargs['provider']: {},
                 'multi-machine': kwargs['multi_machine']
             },
-            'include': ['~/.accloud/credentials.json']
+            'include': ['~/.accloud/credentials.json'],
+            'auto_teardown': kwargs['auto-teardown']
         }
 
         if kwargs['instance']:
@@ -87,8 +89,36 @@ end
 
         self.config = Config(config)
 
-    def status(self):
-        raise NotImplementedError
+    def monitor(self):
+        # Check how long the experiment will last
+        experiment_time = 30
+
+        print('Experiment will finish at {:%x %X}'.format(
+              datetime.datetime.now()
+              + datetime.timedelta(seconds=experiment_time)))
+        try:
+            time.sleep(experiment_time)
+            while(True):
+                print('Checking experiment status')
+                if self.finished():
+                    print('Experiment finished')
+                    self.pull()
+                    self.teardown()
+                else:
+                    print('Experiment not finished, check again in 10 Minutes')
+                    time.sleep(600)
+        except KeyboardInterrupt:
+            print('Monitoring aborted')
+            return
+
+    def finished(self):
+        results = self.call_vm(
+            'screen -ls | grep -E "There (is a|are) screens? on:"')
+
+        for r in results:
+            if r == 0:
+                return False
+        return True
 
     def run(self, **kwargs):
         self.create(**kwargs)
@@ -96,16 +126,23 @@ end
 
     def start(self):
         return self.call('up', '--provider', self.config.machine.provider)
+        if self.config.auto_teardown:
+            self.teardown()
 
     def attach(self):
         self.call('ssh')
 
+    def teardown(self):
+        self.pull()
+        self.destroy()
+
     def pull(self):
-        machines = map(os.path.basename, glob.glob('.vagrant/machines/*'))
-        if len(machines) > 1:
-            for machine in machines:
-                self.call('ssh', machine, '-c', 'for folder in /vagrant/results/*; do mv $folder $folder-{0}; done'.format(machine))
+        self.call_vm('for folder in /vagrant/results/*; '
+                     'do mv $folder $folder-{machine}; done')
         self.call('rsync-pull')
+
+    def destroy(self):
+        self.call('destroy', '-f')
 
     def archive(self, compress=None):
         archive_path = path.join(self.path, 'results.tar.gz')
@@ -152,3 +189,11 @@ end
             return result
         except subprocess.CalledProcessError:
             return result
+
+    def call_vm(self, arg):
+        machines = map(os.path.basename, glob.glob('.vagrant/machines/*'))
+        results = [self.call('ssh', machine, '-c',
+                             arg.format(machine=machine,
+                                        machine_number=machine_number))
+                   for machine_number, machine in enumerate(machines)]
+        return results

@@ -54,6 +54,7 @@ def main():
         cloud.add_argument("--job_cores", dest="job_cores", default=1, type=int, help="number of cores per configuration job")
         cloud.add_argument("--job_memory", dest="job_memory", default=2000, type=int, help="memory per *core* (in MB) for a job on *orcinus* (if cluster supports this limit)")
         cloud.add_argument("--multi_machine", default=1, type=int)
+        cloud.add_argument("--auto-teardown", action='store_true', help='Automatically pull the results and destroy the machine')
 
     command._parser_class = ExtendableSubparser
     cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
@@ -79,6 +80,15 @@ def main():
     attach = command.add_parser('attach')
     attach.set_defaults(func=Run.attach)
     attach.set_defaults(sub=attach)
+
+    teardown = command.add_parser('teardown')
+    teardown.set_defaults(func=Run.teardown)
+    teardown.set_defaults(sub=teardown)
+
+    destroy = command.add_parser('destroy')
+    destroy.set_defaults(func=Run.destroy)
+    destroy.set_defaults(sub=destroy)
+
 
     args = parser.parse_args()
 
