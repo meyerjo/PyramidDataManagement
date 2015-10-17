@@ -4,7 +4,6 @@ from __future__ import print_function
 import sys
 import os
 import argparse
-from time import sleep
 from cloud import events
 import multiprocessing
 from cloud.config import Config
@@ -35,23 +34,26 @@ def main():
     success_events = [events.SuccessMail(config.emails), events.Shutdown()]
     failure_events = [events.FailMail(config.emails)]
 
-    run_processes = []
+    # Semaphore to allow a maximum number of parallel running experiments
     parallel_run_block = multiprocessing.Semaphore(config.parallel_runs)
+    # Mutex to avoid experiments installing at the same time
     install_mutex = multiprocessing.Lock()
 
-    for exp in config.experiments:
-        run_processes.append(
-            ExperimentRunner(exp, parallel_run_block, install_mutex))
+    # Create experiment processes
+    run_processes = [ExperimentRunner(exp, parallel_run_block, install_mutex,
+                                      failure_events)
+                     for exp in config.experiments]
 
+    # Start experiments
     for process in run_processes:
         parallel_run_block.acquire()
         process.start()
 
+    # Wait until processes finish or for user interrupt
     try:
-        while True:
-            sleep(3600)  # Non busy waiting ;)
+        map(Process.join, run_processes)
     except KeyboardInterrupt:
-        print("Exiting due to KeyboardInterrupt", file=sys.stderr)
+        print("\nExiting due to user interrupt", file=sys.stderr)
         sys.exit(1)
 
     for e in success_events:
