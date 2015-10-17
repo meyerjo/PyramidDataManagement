@@ -62,10 +62,11 @@ def main():
     init.set_defaults(sub=init)
     add_cloud_arguments(init)
 
-    # run = command.add_parser('run', parser=cmd_parser.parser)
-    # run.set_defaults(func=Run.run)
-    # run.set_defaults(sub=run)
-    # add_cloud_arguments(run)
+    cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
+    run = command.add_parser('run', parser=cmd_parser.parser)
+    run.set_defaults(func=Run.run)
+    run.set_defaults(sub=run)
+    add_cloud_arguments(run)
 
     pull = command.add_parser('pull')
     pull.set_defaults(func=Run.pull)

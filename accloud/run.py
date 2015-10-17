@@ -59,16 +59,15 @@ class Run(object):
                 'repetition': kwargs['n_runs'],
             },
             'machine': {
-                'provider': {
-                    'name': kwargs['provider'],
-                    'instance': kwargs['instance']
-                },
+                'provider': kwargs['provider'],
+                kwargs['provider']: {},
                 'multi-machine': kwargs['multi_machine']
-            }
+            },
+            'include': ['~/.accloud/credentials.json']
         }
 
         if kwargs['instance']:
-            config['machine']['instance'] = kwargs['instance']
+            config['machine'][kwargs['provider']]['instance'] = kwargs['instance']
         else:
             config['machine']['cores'] = kwargs['job_cores']
             config['machine']['memory'] = kwargs['job_memory']
@@ -84,19 +83,19 @@ class Run(object):
 Vagrant.configure(2) do |config|
   config.vm.box = "ac-cloud"%s
 end
-''' % ('\n' + multi_machine_config) if kwargs['multi_machine'] > 1 else '')
+''' % ('\n' + multi_machine_config if kwargs['multi_machine'] > 1 else ''))
 
         self.config = Config(config)
 
     def status(self):
         raise NotImplementedError
 
-    # def run(self, **kwargs):
-    #     self.init(**kwargs)
-    #     self.start()
+    def run(self, **kwargs):
+        self.create(**kwargs)
+        self.start()
 
     def start(self):
-        return self.call('up', '--provider', self.config.provider.name)
+        return self.call('up', '--provider', self.config.machine.provider)
 
     def attach(self):
         self.call('ssh')
