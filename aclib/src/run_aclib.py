@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 from time import sleep
+from cloud import events
 import multiprocessing
 from cloud.config import Config
 import install_scenario  # pylint: disable=f0401
@@ -31,6 +32,8 @@ def main():
         print('\n'.join(errors))
         print('Complete configuration:')
         print(config)
+    success_events = [events.SuccessMail(config.emails), events.Shutdown()]
+    failure_events = [events.FailMail(config.emails)]
 
     run_processes = []
     parallel_run_block = multiprocessing.Semaphore(config.parallel_runs)
@@ -51,16 +54,20 @@ def main():
         print("Exiting due to KeyboardInterrupt", file=sys.stderr)
         sys.exit(1)
 
+    for e in success_events:
+        e()
+
 
 class ExperimentRunner(multiprocessing.Process):
     '''Run an experiment in AClib in encapsulated in an own process'''
-    def __init__(self, experiment, end_event, install_mutex):
+    def __init__(self, experiment, end_event, install_mutex, failure_events):
 
         multiprocessing.Process.__init__(self, name=experiment.name)
 
         self.install_mutex = install_mutex
         self.release_on_exit = end_event
         self.config = experiment
+        self.failure_events = failure_events
 
     configurators = {
         'ParamILS': runner.ParamILSRunner,
@@ -104,11 +111,12 @@ class ExperimentRunner(multiprocessing.Process):
                         mode=self.config.validate.mode,
                         val_set=self.config.validate.set)
         except (KeyboardInterrupt, SystemExit):
+            for e in self.failure_events:
+                e()
             configurator.cleanup()
         finally:
             print('Experiment {} finished'.format(self.name))
             self.release_on_exit.release()
-
 
 if __name__ == '__main__':
     main()
