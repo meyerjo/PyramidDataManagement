@@ -1,0 +1,5 @@
+*.pyc
+*.pem
+.vagrant
+results/*
+ac-cloud.box
