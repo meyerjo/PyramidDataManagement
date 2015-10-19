@@ -2,4 +2,5 @@
 *.pem
 .vagrant
 results/*
-ac-cloud.box
+*.box
+metadata.json
