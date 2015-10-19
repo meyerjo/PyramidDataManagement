@@ -147,5 +147,6 @@ DEFAULT_CONFIG = {
             "location": Required()
         },
         "multi-machine": 1
-    }
+    },
+    "emails": ["accloud@ziisch.de"]
 }
