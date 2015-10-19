@@ -1,4 +1,4 @@
-%.box:
+%.box: .bashrc Vagrantfile aclib.sh install.sh
 	tar cf $@ .bashrc Vagrantfile aclib.sh install.sh
 	tar rf $@ ../../aclib/*	-C ../..
 	echo "{\"provider\":\"$(basename $@)\"}" > $@.tmp.json

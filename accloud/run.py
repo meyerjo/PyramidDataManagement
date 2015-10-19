@@ -87,7 +87,8 @@ class Run(object):
         for f in sorted(files):
             if essential_links and f.startswith(essential_links[-1]):
                 continue
-            else essential_links.append(f)
+            else:
+                essential_links.append(f)
 
         for link in essential_links:
             create_link(link)
@@ -114,11 +115,11 @@ class Run(object):
                 'multi-machine': kwargs['multi_machine']
             },
             'include': ['~/.accloud/credentials.json'],
-            'auto_teardown': kwargs['auto-teardown']
+            'auto_teardown': kwargs['auto_teardown']
         }
 
         if kwargs['instance']:
-            config['machine'][kwargs['provider']]['instance'] = kwargs['instance']
+            config['machine'][kwargs['provider']]['category'] = kwargs['instance']
         else:
             config['machine']['cores'] = kwargs['job_cores']
             config['machine']['memory'] = kwargs['job_memory']
