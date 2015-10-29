@@ -5,7 +5,7 @@ from os.path import join
 def validationResultPaths(path):
 
     resultpaths = [
-    'results/*/validate-inc/*Results*.csv',
+    'results/*/validate-inc/validationResults-*.csv',
     'results/*/*/SMAC/run-1/validate-inc/*Results*.csv',
     'validate-test/validationResults-tunertimecsscWorkerValid_*.csv',
     '*/SMAC/run-*/validate-inc/validationResults-traj-run-*-walltimelocal.csv',

@@ -2,8 +2,7 @@
 
 '''Draw boxplot from average validation results'''
 
-from paths import validationResultPaths
-import AclibResult
+from accloud.paths import validationResultPaths
 import argparse
 import logging
 import matplotlib.pyplot as plt

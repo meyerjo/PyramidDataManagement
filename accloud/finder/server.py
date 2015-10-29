@@ -4,7 +4,7 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.config import Configurator
 from pyramid.static import static_view
 from wsgiref.simple_server import make_server
-import views
+from . import views
 import os
 
 def serve(**settings):
@@ -13,7 +13,7 @@ def serve(**settings):
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
 
-    dir_path = r'([\w\-\_]*\/)*'
+    dir_path = r'([\w\-\_\.]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
     config.add_route(
