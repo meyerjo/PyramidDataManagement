@@ -73,7 +73,7 @@ def main():
     pull.set_defaults(sub=pull)
 
     start = command.add_parser('start')
-    start.add_argument('--force', '-f', dest='provision', action='store_true')
+    # start.add_argument('--force', '-f', dest='provision', action='store_true')
     start.set_defaults(func=Run.start)
     start.set_defaults(sub=start)
 
