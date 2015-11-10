@@ -2,8 +2,8 @@
 
 '''Create boxplots of single runtimes of a target algorithm'''
 
-from tools import ReadableDir
-import AclibResult
+from accloud.tools import ReadableDir
+from accloud import AclibResult
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
