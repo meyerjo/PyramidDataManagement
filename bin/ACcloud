@@ -89,6 +89,9 @@ def main():
     destroy.set_defaults(func=Run.destroy)
     destroy.set_defaults(sub=destroy)
 
+    link = command.add_parser('link')
+    link.set_defaults(func=Run.link)
+    link.set_defaults(sub=link)
 
     args = parser.parse_args()
 
