@@ -239,7 +239,7 @@ end
     def call(self, *args):
         arguments = list(args)
         arguments.insert(0, 'vagrant')
-        result = 'Error in function call {}'.format(' '.join(args))
+        result = 'Error in function call {}'.format(' '.join(map(str, args)))
         try:
             result = subprocess.check_call(arguments, cwd=self.path)
             return result
