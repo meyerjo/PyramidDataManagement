@@ -13,6 +13,10 @@ def serve(**settings):
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
 
+    config.include('pyramid_debugtoolbar')
+
+
+
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
