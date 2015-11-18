@@ -15,8 +15,6 @@ def serve(**settings):
 
     config.include('pyramid_debugtoolbar')
 
-
-
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
@@ -26,6 +24,9 @@ def serve(**settings):
     config.add_route(
         'csv',
         '/{file:' + dir_path + file_basename + '\.csv}')
+    config.add_route(
+        'matlab',
+        '/{file:' + dir_path + file_basename + '\.m}')
     config.add_route(
         'directory',
         '/{dir:' + dir_path + '}')
@@ -42,6 +43,11 @@ def serve(**settings):
         views.markdown,
         route_name='markdown',
         renderer=here('template/markdown.pt'))
+    config.add_view(
+        views.matlab,
+        route_name='matlab',
+        renderer=here('template/matlab.pt')
+    )
     config.add_view(views.csv_table, route_name='csv')
     config.add_view(views.directory, route_name='directory')
     config.add_view(static, route_name='static')
