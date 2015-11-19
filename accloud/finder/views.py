@@ -5,10 +5,10 @@ from contextlib import contextmanager
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
-import csv
-import hoedown
 import os
 import re
+
+from pyramid.view import view_config
 
 
 @contextmanager
@@ -24,19 +24,6 @@ def open_resource(filename, mode="r"):
             f.close()
 
 
-def csv_table(request):
-    relative_path = os.path.join(
-        request.registry.settings['root_dir'],
-        request.matchdict['file'])
-
-    with open_resource(relative_path) as csv_file:
-        reader = csv.reader(csv_file)
-        table = PageTemplate('''<table>
-            <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
-            </table>''')
-        return Response(table(table=reader))
-
-
 def filter_to_dict(items, differing_characters):
     returning_dict = dict()
     for item in items:
@@ -47,6 +34,7 @@ def filter_to_dict(items, differing_characters):
     return returning_dict
 
 
+@view_config(route_name='directory')
 def directory(request):
     relative_path = os.path.join(
         request.registry.settings['root_dir'],
@@ -85,10 +73,8 @@ def directory(request):
                     directory_settings = jsonpickle.decode(data)
 
     if '.png' in visible_items_by_extension:
+        # TODO: make something like that parametric
         visible_items_by_extension['.png'] = filter_to_dict(visible_items_by_extension['.png'], 4)
-        t = visible_items_by_extension['.png']['VP08'][0]
-        for item in visible_items_by_extension['.png']['VP08']:
-            print('{0} {1}'.format(item, distance(t, item)))
     visible_items_by_extension['..'] = ['..']
 
     if not request.matchdict['dir'] == '':
@@ -115,10 +101,11 @@ def directory(request):
                     <span tal:condition="python: type(value) is not dict">
                         <div tal:switch="extension">
                             <div tal:case="'.png'">
-                                <img tal:attributes="src value; alt value;" class="col-sm-6"/>
+                                <img tal:attributes="src value; alt value;"/>
                                 <tal:span tal:content="value"/>
                             </div>
                             <div tal:case="default">
+                                <i class="fa fa-folder" tal:condition="python: extension == ''"></i>
                                 <a tal:attributes="href value" tal:content="value"/>
                             </div>
                         </div>
@@ -136,25 +123,12 @@ def directory(request):
         dir=request.matchdict['dir'],
         visible_items_by_extension=visible_items_by_extension)
 
-
-    html = render('template/index.pt', {'html': directory_entry})
+    folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
+    files = dict(visible_items_by_extension)
+    if '' in files:
+        del files['']
+    html = render('template/index.pt', {'request': request,
+                                        'html': directory_entry,
+                                        'folders': folders,
+                                        'files': files})
     return Response(html)
-
-
-def markdown(request):
-    markdown_path = os.path.join(
-        request.registry.settings['root_dir'], request.matchdict['file'])
-    with open_resource(markdown_path) as markdown_file:
-        source = markdown_file.read()
-        html = hoedown.Markdown(
-            hoedown.HtmlRenderer(hoedown.HTML_TOC_TREE),
-            hoedown.EXT_TABLES).render(source)
-        return {"request": request, "html": html}
-
-
-def matlab(request):
-    matlab_path = os.path.join(
-        request.registry.settings['root_dir'], request.matchdict['file'])
-    with open_resource(matlab_path) as matlab_file:
-        source = matlab_file.read()
-        return {"request": request, "html": source}

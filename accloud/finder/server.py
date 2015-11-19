@@ -7,6 +7,7 @@ from wsgiref.simple_server import make_server
 import views
 import os
 
+
 def serve(**settings):
     config = Configurator(settings=settings)
     config.include('pyramid_chameleon')
@@ -18,18 +19,10 @@ def serve(**settings):
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
-    config.add_route(
-        'markdown',
-        '/{file:' + dir_path + file_basename + '\.md}')
-    config.add_route(
-        'csv',
-        '/{file:' + dir_path + file_basename + '\.csv}')
-    config.add_route(
-        'matlab',
-        '/{file:' + dir_path + file_basename + '\.m}')
-    config.add_route(
-        'directory',
-        '/{dir:' + dir_path + '}')
+    config.add_route('markdown', '/{file:' + dir_path + file_basename + '\.md}')
+    config.add_route('csv', '/{file:' + dir_path + file_basename + '\.csv}')
+    config.add_route('matlab', '/{file:' + dir_path + file_basename + '\.m}')
+    config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
     config.add_route('files', '/*subpath')
 
@@ -39,20 +32,9 @@ def serve(**settings):
         os.path.abspath(config.registry.settings['root_dir']),
         use_subpath=True)
 
-    config.add_view(
-        views.markdown,
-        route_name='markdown',
-        renderer=here('template/markdown.pt'))
-    config.add_view(
-        views.matlab,
-        route_name='matlab',
-        renderer=here('template/matlab.pt')
-    )
-    config.add_view(views.csv_table, route_name='csv')
-    config.add_view(views.directory, route_name='directory')
     config.add_view(static, route_name='static')
     config.add_view(files, route_name='files')
-
+    config.scan()
     app = config.make_wsgi_app()
     print('Creating server')
     server = make_server('127.0.0.1', settings['port'], app)
