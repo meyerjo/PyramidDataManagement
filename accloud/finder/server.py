@@ -14,13 +14,16 @@ def serve(**settings):
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
 
-    config.include('pyramid_debugtoolbar')
+    for root, files, dirs in os.walk(config.registry.settings['root_dir']):
+        if '.settings.json' in files:
+            print(root, files, dirs)
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
     config.add_route('markdown', '/{file:' + dir_path + file_basename + '\.md}')
     config.add_route('csv', '/{file:' + dir_path + file_basename + '\.csv}')
+    config.add_route('csv_delimiter', '/{file:' + dir_path + file_basename + '\.csv}/{delimiter}')
     config.add_route('matlab', '/{file:' + dir_path + file_basename + '\.m}')
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')

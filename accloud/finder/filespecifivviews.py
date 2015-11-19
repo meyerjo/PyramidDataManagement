@@ -26,14 +26,23 @@ class filespecifivviews:
                 f.close()
 
     @view_config(route_name='csv', renderer='template/index.pt')
+    @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
         # TODO: delimiter choice
         relative_path = os.path.join(
             self.request.registry.settings['root_dir'],
             self.request.matchdict['file'])
+        if 'delimiter' in self.request.matchdict:
+            delimit = str(self.request.matchdict['delimiter'])
+            if delimit in ['tab', '/t']:
+                delimit = str('\t')
+            elif delimit == 'space':
+                delimit = str(' ')
+        else:
+            delimit = str(',')
 
         with self.open_resource(relative_path) as csv_file:
-            reader = csv.reader(csv_file)
+            reader = csv.reader(csv_file, delimiter=delimit)
             table = PageTemplate('''<table class="table table-striped table-bordered table-condensed">
                 <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
                 </table>''')
