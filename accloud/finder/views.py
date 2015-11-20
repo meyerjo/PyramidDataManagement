@@ -24,13 +24,18 @@ def open_resource(filename, mode="r"):
             f.close()
 
 
-def filter_to_dict(items, differing_characters):
+def filter_to_dict(items, filtercriteria):
     returning_dict = dict()
+    testregex = filtercriteria[0]
     for item in items:
-        if item[:differing_characters] in returning_dict:
-            returning_dict[item[:differing_characters]].append(item)
+        print(testregex)
+        print(item)
+        match = re.search(testregex, item)
+        print(str(match))
+        if match.group() in returning_dict:
+            returning_dict[match.group()].append(item)
         else:
-            returning_dict[item[:differing_characters]] = [item]
+            returning_dict[match.group()] = [item]
     return returning_dict
 
 
@@ -71,21 +76,19 @@ def directory(request):
                                        item), "r") as myfile:
                     data = myfile.read()
                     directory_settings = jsonpickle.decode(data)
+    if 'specific_filetemplates' in directory_settings:
+        for (key, values) in directory_settings['specific_filetemplates'].items():
+            if key in visible_items_by_extension and \
+                    key in directory_settings['specific_filetemplates']:
+                # TODO: make something like that parametric
+                visible_items_by_extension[key] = \
+                    filter_to_dict(visible_items_by_extension[key],
+                                   directory_settings['specific_filetemplates'][key]['group_by'])
 
-    if '.png' in visible_items_by_extension:
-        # TODO: make something like that parametric
-        visible_items_by_extension['.png'] = filter_to_dict(visible_items_by_extension['.png'], 4)
     visible_items_by_extension['..'] = ['..']
 
     if not request.matchdict['dir'] == '':
         visible_items.insert(0, '..')
-    # response = PageTemplate('''
-    # Found dir: ${dir}
-    # <ul>
-    #     <li tal:repeat="item items"><a tal:attributes="href item" tal:content="item" /></li>
-    # </ul>
-    # ''')
-
 
     response = PageTemplate('''
     Found dir: ${dir}

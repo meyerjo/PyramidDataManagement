@@ -14,7 +14,7 @@ def serve(**settings):
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
 
-    for root, files, dirs in os.walk(config.registry.settings['root_dir']):
+    for root, dirs, files in os.walk(config.registry.settings['root_dir']):
         if '.settings.json' in files:
             print(root, files, dirs)
 
