@@ -18,7 +18,8 @@
     </div>
     <div>
       <ul class="nav navbar-nav">
-        <li class="active"><a href=".">Home</a></li>
+        <li class="active"><a href=".">Current Folder</a></li>
+        <li><a href="..">Previous Folder</a></li>
           <li tal:condition="folders" tal:repeat="folder folders">
               <a tal:attributes="href folder" tal:content="folder" />
           </li>
@@ -33,7 +34,7 @@
     </div>
   </div>
 </nav>
-<div class="container">
+<div class="container-fluid">
   <div class="row-fluid">
     <div class="col-sm-12">
         ${structure: html}
