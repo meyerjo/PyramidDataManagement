@@ -17,15 +17,31 @@ def serve(**settings):
     config.registry.settings['directory_settings'] = dict()
     config.registry.settings['reload_templates'] = True
     for root, dirs, files in os.walk(config.registry.settings['root_dir']):
+        root = os.path.abspath(root)
         if '.settings.json' in files:
-            root = os.path.abspath(root)
+            lastfolder = os.path.abspath(root + '\\..')
+            last_settings = dict()
+            if lastfolder in config.registry.settings['directory_settings']:
+                last_settings = config.registry.settings['directory_settings'][lastfolder]
+
+            config.registry.settings['directory_settings'][root] = last_settings
+
             filename = root + '\\.settings.json'
             with open(os.path.join(filename), "r") as myfile:
                 data = myfile.read()
-                config.registry.settings['directory_settings'][root] = \
-                    jsonpickle.decode(data)
+                settings_struct = jsonpickle.decode(data)
+
+            settings_struct.update(config.registry.settings['directory_settings'][root])
+            config.registry.settings['directory_settings'][root] = settings_struct
             config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings['reload_templates']
             config.registry.settings['directory_settings'][root]['path'] = filename
+
+        else:
+            path = os.path.abspath(root + '\\..')
+            if path in config.registry.settings['directory_settings']:
+                config.registry.settings['directory_settings'][root] = \
+                    config.registry.settings['directory_settings'][path]
+
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'

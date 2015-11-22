@@ -28,7 +28,7 @@ class filespecifivviews:
     @view_config(route_name='csv', renderer='template/index.pt')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
-        # TODO: delimiter choice
+        # TODO: delimiter choice /  auto detection
         relative_path = os.path.join(
             self.request.registry.settings['root_dir'],
             self.request.matchdict['file'])

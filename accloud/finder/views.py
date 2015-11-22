@@ -188,6 +188,7 @@ def directory(request):
         del files['']
 
     # apply templates
+    errors = []
     for (extension, filenames) in visible_items_by_extension.items():
         if 'specific_filetemplates' in directory_settings:
             if extension in directory_settings['specific_filetemplates']:
@@ -197,6 +198,7 @@ def directory(request):
                     visible_items_by_extension[extension] = \
                         filter_to_dict(filenames, extension_specific['group_by'])
                 except Exception as e:
+                    errors.append(e.message)
                     print(e.message)
                 elements_per_row = extension_specific['elements_per_row']
                 column_width = int(math.ceil(12 / elements_per_row))
@@ -209,11 +211,8 @@ def directory(request):
             else:
                 # TODO: use folder_template as well
                 if 'file_template' in directory_settings:
-                    file_template = directory_settings['file_template']
-                    file_template = PageTemplate(file_template)
-                    tmp = []
-                    for file in filenames:
-                        tmp.append(file_template(item=file))
+                    file_template = PageTemplate(directory_settings['file_template'])
+                    tmp = [file_template(item=file) for file in filenames]
                     visible_items_by_extension[extension] = tmp
 
     visible_items_by_extension['..'] = ['..']
