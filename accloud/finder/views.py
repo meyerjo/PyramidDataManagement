@@ -1,5 +1,8 @@
 import jsonpickle as jsonpickle
 import math
+
+import numpy
+import sys
 from Levenshtein._levenshtein import distance
 from chameleon import PageTemplate
 from contextlib import contextmanager
@@ -41,19 +44,83 @@ def filter_to_dict(items, filtercriteria):
             returning_dict[match.group()] = [item]
     return returning_dict
 
+def compute_edit_distance_matrix(input):
+    """
+    Computes the edit distance between the
+    :param input:
+    :return:
+    """
+    matrix = numpy.zeros(shape=(len(input), len(input)))
+    for i, item_a in enumerate(input):
+        for j, item_b in enumerate(input):
+            if i == j:
+                matrix[i, j] = sys.maxint - 1
+            else:
+                matrix[i, j] = distance(item_a, item_b)
+            print matrix[i, j], item_a, item_b
+    return matrix
+
+def group_by_matrix(input, matrix, items_per_row):
+    """
+    Groups the elements in input into rows using the weights contained in matrix.
+    :param input:
+    :param matrix:
+    :param items_per_row:
+    :return:
+    """
+    rows = []
+    tmp_row = []
+    minvalue = matrix.min()
+    elements_to_add = len(input)
+    # TODO: refactor this, should be more pretty
+    while minvalue != sys.maxint:
+        index = numpy.unravel_index(matrix.argmin(), matrix.shape)
+        elements = [input[index[0]], input[index[1]]]
+
+        for element in elements:
+            tmp_row.append(element)
+            elements_to_add -= 1
+            if len(tmp_row) == items_per_row:
+                rows.append(tmp_row)
+                tmp_row = []
+            if elements_to_add == 0 and len(tmp_row) > 0:
+                rows.append(tmp_row)
+                tmp_row = []
+
+        # prevent this tuple from further existing
+        matrix[index] = sys.maxint
+        matrix[index[1], index[0]] = sys.maxint
+
+        # if the row is full then we can eliminate the files
+        if len(tmp_row) == 0:
+            matrix[index[0], :] = sys.maxint
+            matrix[index[1], :] = sys.maxint
+            matrix[:, index[0]] = sys.maxint
+            matrix[:, index[1]] = sys.maxint
+        minvalue = matrix.min()
+    return rows
+
+
 
 def split_into_rows(input, items_per_row):
     assert (items_per_row >= 1)
     if isinstance(input, list):
-        rows = []
-        tmp_row = []
-        for item in input:
-            tmp_row.append(item)
-            if len(tmp_row) == items_per_row:
+        # TODO: let the user decide which method to use
+        grouping_method = 'numerical'
+
+        if grouping_method == 'numerical':
+            matrix = compute_edit_distance_matrix(input)
+            rows =group_by_matrix(input, matrix, items_per_row)
+        else:
+            rows = []
+            tmp_row = []
+            for item in input:
+                tmp_row.append(item)
+                if len(tmp_row) == items_per_row:
+                    rows.append(tmp_row)
+                    tmp_row = []
+            if tmp_row is not []:
                 rows.append(tmp_row)
-                tmp_row = []
-        if tmp_row is not []:
-            rows.append(tmp_row)
         return rows
     elif isinstance(input, dict):
         for (key, value) in input.items():
@@ -115,26 +182,39 @@ def directory(request):
                 visible_items_by_extension[file_extension] = [item]
         else:
             invisible_items.append(item)
+    folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
+    files = dict(visible_items_by_extension)
+    if '' in files:
+        del files['']
 
     # apply templates
-    if 'specific_filetemplates' in directory_settings:
-        for (key, values) in directory_settings['specific_filetemplates'].items():
-            if key in visible_items_by_extension and \
-                            key in directory_settings['specific_filetemplates']:
+    for (extension, filenames) in visible_items_by_extension.items():
+        if 'specific_filetemplates' in directory_settings:
+            if extension in directory_settings['specific_filetemplates']:
+                extension_specific = directory_settings['specific_filetemplates'][extension]
                 # TODO: make this more readable / compact
                 try:
-                    visible_items_by_extension[key] = \
-                        filter_to_dict(visible_items_by_extension[key],
-                                       directory_settings['specific_filetemplates'][key]['group_by'])
+                    visible_items_by_extension[extension] = \
+                        filter_to_dict(filenames, extension_specific['group_by'])
                 except Exception as e:
                     print(e.message)
-                elements_per_row = directory_settings['specific_filetemplates'][key]['elements_per_row']
+                elements_per_row = extension_specific['elements_per_row']
                 column_width = int(math.ceil(12 / elements_per_row))
-                specific_template = PageTemplate(directory_settings['specific_filetemplates'][key]['template'])
-                visible_items_by_extension[key] = split_into_rows(visible_items_by_extension[key], elements_per_row)
-                html = specific_template(grouped_files=visible_items_by_extension[key],
+
+                specific_template = PageTemplate(extension_specific['template'])
+                visible_items_by_extension[extension] = split_into_rows(visible_items_by_extension[extension], elements_per_row)
+                html = specific_template(grouped_files=visible_items_by_extension[extension],
                                          columnwidth=column_width)
-                visible_items_by_extension[key] = [html]
+                visible_items_by_extension[extension] = [html]
+            else:
+                # TODO: use folder_template as well
+                if 'file_template' in directory_settings:
+                    file_template = directory_settings['file_template']
+                    file_template = PageTemplate(file_template)
+                    tmp = []
+                    for file in filenames:
+                        tmp.append(file_template(item=file))
+                    visible_items_by_extension[extension] = tmp
 
     visible_items_by_extension['..'] = ['..']
 
@@ -175,10 +255,6 @@ def directory(request):
         dir=request.matchdict['dir'],
         visible_items_by_extension=visible_items_by_extension)
 
-    folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
-    files = dict(visible_items_by_extension)
-    if '' in files:
-        del files['']
     html = render('template/index.pt', {'request': request,
                                         'html': directory_entry,
                                         'folders': folders,
