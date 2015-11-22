@@ -26,23 +26,34 @@ def open_resource(filename, mode="r"):
         finally:
             f.close()
 
-
-def filter_to_dict(items, filtercriteria):
-    assert (len(filtercriteria) >= 1)
-    if len(filtercriteria) > 1:
-        print('WARNING: You specified more than one group criteria. Currently only one is supported.')
+def apply_filter_to_items(items, filter):
+    assert(isinstance(filter, str) or isinstance(filter, unicode))
     returning_dict = dict()
-    testregex = filtercriteria[0]
     for item in items:
-        match = re.search(testregex, item)
+        match = re.search(filter, item)
         if match is None:
-            print('Couldnt group the following item, because the regex failed {0} {1}'.format(item, testregex))
+            print('Couldn\'t group the following item, because the regex failed {0} {1}'.format(item, filter))
             continue
         if match.group() in returning_dict:
             returning_dict[match.group()].append(item)
         else:
             returning_dict[match.group()] = [item]
     return returning_dict
+
+
+def filter_to_dict(items, filtercriteria):
+    assert (len(filtercriteria) >= 1)
+
+    returning_dict = dict()
+    if isinstance(items, list):
+        returning_dict = apply_filter_to_items(items, str(filtercriteria[0]))
+    if len(filtercriteria) == 1:
+        return returning_dict
+
+    for (key, values) in returning_dict.items():
+        returning_dict[key] = filter_to_dict(values, filtercriteria[1:])
+    return returning_dict
+
 
 def compute_edit_distance_matrix(input):
     """
@@ -57,7 +68,6 @@ def compute_edit_distance_matrix(input):
                 matrix[i, j] = sys.maxint - 1
             else:
                 matrix[i, j] = distance(item_a, item_b)
-            print matrix[i, j], item_a, item_b
     return matrix
 
 def group_by_matrix(input, matrix, items_per_row):
@@ -110,7 +120,7 @@ def split_into_rows(input, items_per_row):
 
         if grouping_method == 'numerical':
             matrix = compute_edit_distance_matrix(input)
-            rows =group_by_matrix(input, matrix, items_per_row)
+            rows = group_by_matrix(input, matrix, items_per_row)
         else:
             rows = []
             tmp_row = []
@@ -197,6 +207,7 @@ def directory(request):
                 try:
                     visible_items_by_extension[extension] = \
                         filter_to_dict(filenames, extension_specific['group_by'])
+                    print(visible_items_by_extension)
                 except Exception as e:
                     errors.append(e.message)
                     print(e.message)
@@ -205,6 +216,7 @@ def directory(request):
 
                 specific_template = PageTemplate(extension_specific['template'])
                 visible_items_by_extension[extension] = split_into_rows(visible_items_by_extension[extension], elements_per_row)
+                print(visible_items_by_extension)
                 html = specific_template(grouped_files=visible_items_by_extension[extension],
                                          columnwidth=column_width)
                 visible_items_by_extension[extension] = [html]
