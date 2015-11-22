@@ -1,17 +1,17 @@
-import jsonpickle as jsonpickle
 import math
-
-import numpy
+import os
+import re
 import sys
+from contextlib import contextmanager
+import jsonpickle as jsonpickle
+import numpy
 from Levenshtein._levenshtein import distance
 from chameleon import PageTemplate
-from contextlib import contextmanager
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
-import os
-import re
 from pyramid.view import view_config
+from itemgrouper import ItemGrouper
 
 
 @contextmanager
@@ -26,8 +26,9 @@ def open_resource(filename, mode="r"):
         finally:
             f.close()
 
+
 def apply_filter_to_items(items, filter):
-    assert(isinstance(filter, str) or isinstance(filter, unicode))
+    assert (isinstance(filter, str) or isinstance(filter, unicode))
     returning_dict = dict()
     for item in items:
         match = re.search(filter, item)
@@ -43,7 +44,6 @@ def apply_filter_to_items(items, filter):
 
 def filter_to_dict(items, filtercriteria):
     assert (len(filtercriteria) >= 1)
-
     returning_dict = dict()
     if isinstance(items, list):
         returning_dict = apply_filter_to_items(items, str(filtercriteria[0]))
@@ -55,83 +55,14 @@ def filter_to_dict(items, filtercriteria):
     return returning_dict
 
 
-def compute_edit_distance_matrix(input):
-    """
-    Computes the edit distance between the
-    :param input:
-    :return:
-    """
-    matrix = numpy.zeros(shape=(len(input), len(input)))
-    for i, item_a in enumerate(input):
-        for j, item_b in enumerate(input):
-            if i == j:
-                matrix[i, j] = sys.maxint - 1
-            else:
-                matrix[i, j] = distance(item_a, item_b)
-    return matrix
-
-def group_by_matrix(input, matrix, items_per_row):
-    """
-    Groups the elements in input into rows using the weights contained in matrix.
-    :param input:
-    :param matrix:
-    :param items_per_row:
-    :return:
-    """
-    rows = []
-    tmp_row = []
-    minvalue = matrix.min()
-    elements_to_add = len(input)
-    # TODO: refactor this, should be more pretty
-    while minvalue != sys.maxint:
-        index = numpy.unravel_index(matrix.argmin(), matrix.shape)
-        elements = [input[index[0]], input[index[1]]]
-
-        for element in elements:
-            tmp_row.append(element)
-            elements_to_add -= 1
-            if len(tmp_row) == items_per_row:
-                rows.append(tmp_row)
-                tmp_row = []
-            if elements_to_add == 0 and len(tmp_row) > 0:
-                rows.append(tmp_row)
-                tmp_row = []
-
-        # prevent this tuple from further existing
-        matrix[index] = sys.maxint
-        matrix[index[1], index[0]] = sys.maxint
-
-        # if the row is full then we can eliminate the files
-        if len(tmp_row) == 0:
-            matrix[index[0], :] = sys.maxint
-            matrix[index[1], :] = sys.maxint
-            matrix[:, index[0]] = sys.maxint
-            matrix[:, index[1]] = sys.maxint
-        minvalue = matrix.min()
-    return rows
-
-
 
 def split_into_rows(input, items_per_row):
     assert (items_per_row >= 1)
     if isinstance(input, list):
         # TODO: let the user decide which method to use
         grouping_method = 'numerical'
-
-        if grouping_method == 'numerical':
-            matrix = compute_edit_distance_matrix(input)
-            rows = group_by_matrix(input, matrix, items_per_row)
-        else:
-            rows = []
-            tmp_row = []
-            for item in input:
-                tmp_row.append(item)
-                if len(tmp_row) == items_per_row:
-                    rows.append(tmp_row)
-                    tmp_row = []
-            if tmp_row is not []:
-                rows.append(tmp_row)
-        return rows
+        grouper = ItemGrouper()
+        return grouper.group(input, items_per_row, grouping_method)
     elif isinstance(input, dict):
         for (key, value) in input.items():
             input[key] = split_into_rows(value, items_per_row)
@@ -156,35 +87,22 @@ def load_directory_settings(directory, request):
     return dict()
 
 
-@view_config(route_name='directory')
-def directory(request):
-    relative_path = os.path.join(
-        request.registry.settings['root_dir'],
-        request.matchdict['dir'])
-    listing = os.listdir(relative_path)
-    visible_items = []
+def reorganize_files(listing, blacklist=[]):
     visible_items_by_extension = dict()
+    visible_items = []
     invisible_items = []
-    relative_path = str(os.path.abspath(relative_path)).encode('string-escape')
-    relative_path = relative_path.decode('string-escape')
-
-    # load settings, and reload if necessary
-    directory_settings = load_directory_settings(relative_path, request)
-
-    # iterate over all files
     for item in listing:
         filename, file_extension = os.path.splitext(item)
         if not item.startswith('.'):
             skipfile = False
-            if 'blacklist' in directory_settings:
-                for rule in directory_settings['blacklist']:
-                    if rule == '':
-                        continue
-                    if re.search(rule, item) is not None:
-                        skipfile = True
-                        break
-                if skipfile:
+            for rule in blacklist:
+                if rule == '':
                     continue
+                if re.search(rule, item) is not None:
+                    skipfile = True
+                    break
+            if skipfile:
+                continue
             visible_items.append(item)
             if file_extension in visible_items_by_extension:
                 visible_items_by_extension[file_extension].append(item)
@@ -192,6 +110,28 @@ def directory(request):
                 visible_items_by_extension[file_extension] = [item]
         else:
             invisible_items.append(item)
+    return visible_items_by_extension, visible_items, invisible_items
+
+
+@view_config(route_name='directory')
+def directory(request):
+    relative_path = os.path.join(
+        request.registry.settings['root_dir'],
+        request.matchdict['dir'])
+    listing = os.listdir(relative_path)
+    relative_path = str(os.path.abspath(relative_path)).encode('string-escape')
+    relative_path = relative_path.decode('string-escape')
+
+    # load settings, and reload if necessary
+    directory_settings = load_directory_settings(relative_path, request)
+
+    # restructure files and split them according to their fileextension
+    if 'blacklist' in directory_settings:
+        visible_items_by_extension, visible_items, invisible_items = reorganize_files(listing, directory_settings['blacklist'])
+    else:
+        visible_items_by_extension, visible_items, invisible_items = reorganize_files(listing)
+
+    # get the folders and files
     folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
     files = dict(visible_items_by_extension)
     if '' in files:
@@ -215,8 +155,8 @@ def directory(request):
                 column_width = int(math.ceil(12 / elements_per_row))
 
                 specific_template = PageTemplate(extension_specific['template'])
-                visible_items_by_extension[extension] = split_into_rows(visible_items_by_extension[extension], elements_per_row)
-                print(visible_items_by_extension)
+                visible_items_by_extension[extension] = split_into_rows(visible_items_by_extension[extension],
+                                                                        elements_per_row)
                 html = specific_template(grouped_files=visible_items_by_extension[extension],
                                          columnwidth=column_width)
                 visible_items_by_extension[extension] = [html]
