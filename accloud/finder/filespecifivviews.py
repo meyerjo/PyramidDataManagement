@@ -49,17 +49,19 @@ class filespecifivviews:
             table_html = table(table=reader)
             return {"request": self.request, "html": table_html, "files": dict(), "folders": ['.', '..']}
 
-    @view_config(route_name='markdown', renderer='template/markdown.pt')
+    @view_config(route_name='markdown', renderer='template/index.pt')
     def markdown(self):
         markdown_path = os.path.join(
             self.request.registry.settings['root_dir'],
             self.request.matchdict['file'])
         with self.open_resource(markdown_path) as markdown_file:
             source = markdown_file.read()
+            source = str(source)
             html = hoedown.Markdown(
                 hoedown.HtmlRenderer(hoedown.HTML_TOC_TREE),
                 hoedown.EXT_TABLES).render(source)
-            return {"request": self.request, "html": html, "files": dict(), "folders": ['.', '..']}
+            html = render('template/markdown.pt', {"request": self.request, "html": html})
+        return {"request": self.request, "html": html, "files": dict(), "folders": ['.', '..']}
 
     @view_config(route_name='matlab', renderer='template/index.pt')
     def matlab(self):
