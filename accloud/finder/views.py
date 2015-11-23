@@ -1,16 +1,16 @@
+import inspect
 import math
 import os
 import re
-import sys
 from contextlib import contextmanager
+
 import jsonpickle as jsonpickle
-import numpy
-from Levenshtein._levenshtein import distance
 from chameleon import PageTemplate
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
+
 from itemgrouper import ItemGrouper
 
 
@@ -28,6 +28,12 @@ def open_resource(filename, mode="r"):
 
 
 def apply_filter_to_items(items, filter):
+    """
+    Gets a list of string items and a list of filtercriteria consisting of regular_expressions and filters them into a dictionary
+    :param items: list of strings
+    :param filter: list of regular expressions
+    :return: filtered dictionary
+    """
     assert (isinstance(filter, str) or isinstance(filter, unicode))
     returning_dict = dict()
     for item in items:
@@ -73,15 +79,22 @@ def split_into_rows(input, items_per_row):
 
 
 def load_directory_settings(directory, request):
+    """
+    Load the directory settings for the specific directory. Checks if it is indicated that a reload is required.
+    :param directory:
+    :param request:
+    :return:
+    """
     if directory in request.registry.settings['directory_settings']:
         directory_settings = request.registry.settings['directory_settings'][directory]
         if 'reload' in request.registry.settings['directory_settings'][directory]:
             reload_templates = request.registry.settings['directory_settings'][directory]['reload']
             if reload_templates:
-                with open(directory_settings['path'], "r") as myfile:
-                    data = myfile.read()
-                    directory_settings = jsonpickle.decode(data)
-                    return directory_settings
+                if os.path.exists(directory_settings['path']):
+                    with open(directory_settings['path'], "r") as myfile:
+                        data = myfile.read()
+                        directory_settings = jsonpickle.decode(data)
+                        return directory_settings
             return directory_settings
         return directory_settings
     return dict()
@@ -147,7 +160,6 @@ def directory(request):
                 try:
                     visible_items_by_extension[extension] = \
                         filter_to_dict(filenames, extension_specific['group_by'])
-                    print(visible_items_by_extension)
                 except Exception as e:
                     errors.append(e.message)
                     print(e.message)
@@ -160,51 +172,31 @@ def directory(request):
                 html = specific_template(grouped_files=visible_items_by_extension[extension],
                                          columnwidth=column_width)
                 visible_items_by_extension[extension] = [html]
-            else:
+            elif extension != '':
                 # TODO: use folder_template as well
                 if 'file_template' in directory_settings:
                     file_template = PageTemplate(directory_settings['file_template'])
                     tmp = [file_template(item=file) for file in filenames]
                     visible_items_by_extension[extension] = tmp
+            else:
+                if 'folder_template' in directory_settings:
+                    folder_template = PageTemplate(directory_settings['folder_template'])
+                    tmp = [folder_template(item=file) for file in filenames]
+                    visible_items_by_extension[extension] = tmp
+
 
     visible_items_by_extension['..'] = ['..']
 
     if not request.matchdict['dir'] == '':
         visible_items.insert(0, '..')
 
-    response = PageTemplate('''
-    Found dir: ${dir}
-    <ul metal:define-macro="filter_depth">
-        <li tal:repeat="(key, values) sorted(visible_items_by_extension.items())">
-            <div tal:condition="python: key.startswith('.') or not key">
-                <span tal:define="global extension key;"></span>
-            </div>
-            <span tal:content="key"></span>
-            <ul tal:condition="python: type(values) is not dict">
-                <li tal:repeat="value values">
-                    <ul tal:condition="python: type(value) is dict" metal:use-macro="template.macro['filter_depth']"/>
-                    <span tal:condition="python: type(value) is not dict">
-                        <div tal:condition="python: value.startswith('<')">
-                            ${structure: value}
-                        </div>
-                        <div tal:condition="python: not value.startswith('<')">
-                            <i class="fa fa-file"  tal:condition="python: extension != ''"></i>
-                            <i class="fa fa-folder" tal:condition="python: extension == ''"></i>
-                            <a tal:attributes="href value" tal:content="value"/>
-                        </div>
-                    </span>
-                </li>
-            </ul>
-            <div tal:condition="python: type(values) is dict" tal:define="visible_items_by_extension values">
-                <ul metal:use-macro="template.macros['filter_depth']"></ul>
-            </div>
-        </li>
-    </ul>
-    ''')
+    directory_entry = render('template/directory.pt',
+                             {'dir': request.matchdict['dir'],
+                              'visible_items_by_extension': visible_items_by_extension})
 
-    directory_entry = response(
-        dir=request.matchdict['dir'],
-        visible_items_by_extension=visible_items_by_extension)
+    # TODO: load the directory script dynamically
+    script_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    # print os.path.exists(script_folder + '/template/directory.pt')
 
     html = render('template/index.pt', {'request': request,
                                         'html': directory_entry,
