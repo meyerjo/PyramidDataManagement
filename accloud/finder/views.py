@@ -74,7 +74,7 @@ def split_into_rows(input, items_per_row):
             input[key] = split_into_rows(value, items_per_row)
         return input
     else:
-        print('Something went wrong')
+        print('Something went wrong. The type of the input isn\'t a dict or a list. {0}'.format(str(type(input))))
         return input
 
 
@@ -149,6 +149,7 @@ def directory(request):
     files = dict(visible_items_by_extension)
     if '' in files:
         del files['']
+    visible_items_by_extension['..'] = ['..']
 
     # apply templates
     errors = []
@@ -172,7 +173,7 @@ def directory(request):
                 html = specific_template(grouped_files=visible_items_by_extension[extension],
                                          columnwidth=column_width)
                 visible_items_by_extension[extension] = [html]
-            elif extension != '':
+            elif extension != '' and not extension == '..':
                 # TODO: use folder_template as well
                 if 'file_template' in directory_settings:
                     file_template = PageTemplate(directory_settings['file_template'])
@@ -183,9 +184,6 @@ def directory(request):
                     folder_template = PageTemplate(directory_settings['folder_template'])
                     tmp = [folder_template(item=file) for file in filenames]
                     visible_items_by_extension[extension] = tmp
-
-
-    visible_items_by_extension['..'] = ['..']
 
     if not request.matchdict['dir'] == '':
         visible_items.insert(0, '..')
