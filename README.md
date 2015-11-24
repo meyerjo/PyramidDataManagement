@@ -51,3 +51,18 @@ The fields folder / file_template specify the template which should be used for 
 ## specific_filetemplates
 The field specific_filetemplates, contains a dictionary of behaviour rules for specific filetypes. In this example all png files are supposed to be grouped first, by the first 4 letters of their filename and then by their category as grid or scalpplot.
 Furthermore it is specified that always 2 pictures should be displayed in one row. The last field is the template used to display the files.
+
+
+# TODO
+* new directories have to be detected and the directory_settings from the parent folder should be used
+* Add a button which can be used to add an local .settings.json file which can later be edited
+* add a button to manipulate the .settings.json file
+* add favorite files, which can be displayed in other folders
+* file base preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
+* filename specific reload option ==> change the identificator for filespecific templates to a regex string
+* allow user to select plots over multiple folders in order to gnerate a report
+* allow user to add comments to a folder about informations contained
+* download a folder as zip container
+* download a specific subset as a zip container
+* allow to toggle entries
+* user authentication

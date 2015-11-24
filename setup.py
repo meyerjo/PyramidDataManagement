@@ -14,6 +14,7 @@ requires = [
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'waitress',
+    'python-Levenshtein'
     ]
 
 setup(name='accloud',

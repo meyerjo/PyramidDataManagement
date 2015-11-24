@@ -97,6 +97,12 @@ def load_directory_settings(directory, request):
                         return directory_settings
             return directory_settings
         return directory_settings
+    else:
+        # check if the parent folder has some marked settings
+        previous_folder = os.path.abspath(directory + '/../')
+        previous_folder = previous_folder.encode('string-escape')
+        previous_folder = previous_folder.decode('string-escape')
+        return load_directory_settings(previous_folder, request)
     return dict()
 
 
@@ -124,6 +130,23 @@ def reorganize_files(listing, blacklist=[]):
         else:
             invisible_items.append(item)
     return visible_items_by_extension, visible_items, invisible_items
+
+
+def apply_specific_templates(filenames, extension_specific):
+    errors = []
+    # TODO: make this more readable / compact
+    try:
+        grouped_files = filter_to_dict(filenames, extension_specific['group_by'])
+    except Exception as e:
+        errors.append(e.message)
+        print(e.message)
+    elements_per_row = extension_specific['elements_per_row']
+    column_width = int(math.ceil(12 / elements_per_row))
+
+    specific_template = PageTemplate(extension_specific['template'])
+    row_groups_files = split_into_rows(grouped_files,  elements_per_row)
+    html = specific_template(grouped_files=row_groups_files, columnwidth=column_width)
+    return html, errors
 
 
 @view_config(route_name='directory')
@@ -157,24 +180,9 @@ def directory(request):
         if 'specific_filetemplates' in directory_settings:
             if extension in directory_settings['specific_filetemplates']:
                 extension_specific = directory_settings['specific_filetemplates'][extension]
-                # TODO: make this more readable / compact
-                try:
-                    visible_items_by_extension[extension] = \
-                        filter_to_dict(filenames, extension_specific['group_by'])
-                except Exception as e:
-                    errors.append(e.message)
-                    print(e.message)
-                elements_per_row = extension_specific['elements_per_row']
-                column_width = int(math.ceil(12 / elements_per_row))
-
-                specific_template = PageTemplate(extension_specific['template'])
-                visible_items_by_extension[extension] = split_into_rows(visible_items_by_extension[extension],
-                                                                        elements_per_row)
-                html = specific_template(grouped_files=visible_items_by_extension[extension],
-                                         columnwidth=column_width)
+                html, errors = apply_specific_templates(filenames, extension_specific)
                 visible_items_by_extension[extension] = [html]
             elif extension != '' and not extension == '..':
-                # TODO: use folder_template as well
                 if 'file_template' in directory_settings:
                     file_template = PageTemplate(directory_settings['file_template'])
                     tmp = [file_template(item=file) for file in filenames]

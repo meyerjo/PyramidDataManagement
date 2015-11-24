@@ -54,7 +54,7 @@ class ItemGrouper:
             matrix[index] = sys.maxint
             matrix[index[1], index[0]] = sys.maxint
 
-            # if the row is full then we can eliminate the files
+            # if the row is full then we can eliminate the files, otherwise we have to leave space for 
             if len(tmp_row) == 0:
                 matrix[index[0], :] = sys.maxint
                 matrix[index[1], :] = sys.maxint
