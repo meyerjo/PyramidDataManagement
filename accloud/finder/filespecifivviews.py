@@ -2,6 +2,8 @@ import csv
 import os
 from contextlib import contextmanager
 import hoedown
+
+import sys
 from chameleon import PageTemplate
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
@@ -28,10 +30,10 @@ class filespecifivviews:
     @view_config(route_name='csv', renderer='template/index.pt')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
-        # TODO: delimiter choice /  auto detection
         relative_path = os.path.join(
             self.request.registry.settings['root_dir'],
             self.request.matchdict['file'])
+        auto_detect_delimiter = False
         if 'delimiter' in self.request.matchdict:
             delimit = str(self.request.matchdict['delimiter'])
             if delimit in ['tab', '/t']:
@@ -39,7 +41,20 @@ class filespecifivviews:
             elif delimit == 'space':
                 delimit = str(' ')
         else:
+            auto_detect_delimiter = True
             delimit = str(',')
+
+        if auto_detect_delimiter:
+            with self.open_resource(relative_path) as csv_file:
+                possible_delimiters = ['\t', ',', ';', ' ']
+                min_delimiter = 0
+                delimit = possible_delimiters[0]
+                file_content = csv_file.read()
+                for delimiter in possible_delimiters:
+                    count = file_content.count(delimiter)
+                    if count > min_delimiter:
+                        delimit = delimiter
+                        min_delimiter = count
 
         with self.open_resource(relative_path) as csv_file:
             reader = csv.reader(csv_file, delimiter=delimit)
