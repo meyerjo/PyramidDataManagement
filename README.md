@@ -54,7 +54,7 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
 
 
 # TODO
-* new directories have to be detected and the directory_settings from the parent folder should be used
+* new directories have to be detected and the directory_settings from the parent folder should be used - Done
 * Add a button which can be used to add an local .settings.json file which can later be edited
 * add a button to manipulate the .settings.json file
 * add favorite files, which can be displayed in other folders
