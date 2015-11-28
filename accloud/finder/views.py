@@ -1,7 +1,6 @@
 import inspect
 import math
 import os
-import re
 from contextlib import contextmanager
 
 import jsonpickle as jsonpickle
@@ -27,68 +26,17 @@ def open_resource(filename, mode="r"):
             f.close()
 
 
-def apply_filter_to_items(items, filter):
-    """
-    Gets a list of string items and a list of filtercriteria consisting of regular_expressions and filters them into a dictionary
-    :param items: list of strings
-    :param filter: list of regular expressions
-    :return: filtered dictionary
-    """
-    assert (isinstance(filter, str) or isinstance(filter, unicode))
-    returning_dict = dict()
-    for item in items:
-        match = re.search(filter, item)
-        if match is None:
-            print('Couldn\'t group the following item, because the regex failed {0} {1}'.format(item, filter))
-            continue
-        if match.group() in returning_dict:
-            returning_dict[match.group()].append(item)
-        else:
-            returning_dict[match.group()] = [item]
-    return returning_dict
-
-
-def filter_to_dict(items, filtercriteria):
-    assert (len(filtercriteria) >= 1)
-    returning_dict = dict()
-    if isinstance(items, list):
-        returning_dict = apply_filter_to_items(items, str(filtercriteria[0]))
-    if len(filtercriteria) == 1:
-        return returning_dict
-
-    for (key, values) in returning_dict.items():
-        returning_dict[key] = filter_to_dict(values, filtercriteria[1:])
-    return returning_dict
-
-
-
-def split_into_rows(input, items_per_row):
-    assert (items_per_row >= 1)
-    if isinstance(input, list):
-        # TODO: let the user decide which method to use
-        grouping_method = 'numerical'
-        grouper = ItemGrouper()
-        return grouper.group(input, items_per_row, grouping_method)
-    elif isinstance(input, dict):
-        for (key, value) in input.items():
-            input[key] = split_into_rows(value, items_per_row)
-        return input
-    else:
-        print('Something went wrong. The type of the input isn\'t a dict or a list. {0}'.format(str(type(input))))
-        return input
-
-
-def load_directory_settings(directory, request):
+def load_directory_settings(directorypath, directorysettings):
     """
     Load the directory settings for the specific directory. Checks if it is indicated that a reload is required.
-    :param directory:
-    :param request:
+    :param directorypath: Path of the folder, which should load the files
+    :param directorysettings: Dictionary with the specific directory settings
     :return:
     """
-    if directory in request.registry.settings['directory_settings']:
-        directory_settings = request.registry.settings['directory_settings'][directory]
-        if 'reload' in request.registry.settings['directory_settings'][directory]:
-            reload_templates = request.registry.settings['directory_settings'][directory]['reload']
+    if directorypath in directorysettings:
+        directory_settings = directorysettings[directorypath]
+        if 'reload' in directorysettings[directorypath]:
+            reload_templates = directorysettings[directorypath]['reload']
             if reload_templates:
                 if os.path.exists(directory_settings['path']):
                     with open(directory_settings['path'], "r") as myfile:
@@ -99,54 +47,25 @@ def load_directory_settings(directory, request):
         return directory_settings
     else:
         # check if the parent folder has some marked settings
-        previous_folder = os.path.abspath(directory + '/../')
+        previous_folder = os.path.abspath(directorypath + '/../')
         previous_folder = previous_folder.encode('string-escape')
         previous_folder = previous_folder.decode('string-escape')
-        return load_directory_settings(previous_folder, request)
-    return dict()
-
-
-def reorganize_files(listing, blacklist=[]):
-    visible_items_by_extension = dict()
-    visible_items = []
-    invisible_items = []
-    for item in listing:
-        filename, file_extension = os.path.splitext(item)
-        if not item.startswith('.'):
-            skipfile = False
-            for rule in blacklist:
-                if rule == '':
-                    continue
-                if re.search(rule, item) is not None:
-                    skipfile = True
-                    break
-            if skipfile:
-                continue
-            visible_items.append(item)
-            if file_extension in visible_items_by_extension:
-                visible_items_by_extension[file_extension].append(item)
-            else:
-                visible_items_by_extension[file_extension] = [item]
-        else:
-            invisible_items.append(item)
-    return visible_items_by_extension, visible_items, invisible_items
+        return load_directory_settings(previous_folder, directorysettings)
 
 
 def apply_specific_templates(filenames, extension_specific):
-    errors = []
-    # TODO: make this more readable / compact
-    try:
-        grouped_files = filter_to_dict(filenames, extension_specific['group_by'])
-    except Exception as e:
-        errors.append(e.message)
-        print(e.message)
+    """
+    Applies the specific templates which are set in the directory_settings to the list of files
+    :param filenames:
+    :param extension_specific:
+    :return:
+    """
     elements_per_row = extension_specific['elements_per_row']
     column_width = int(math.ceil(12 / elements_per_row))
 
     specific_template = PageTemplate(extension_specific['template'])
-    row_groups_files = split_into_rows(grouped_files,  elements_per_row)
-    html = specific_template(grouped_files=row_groups_files, columnwidth=column_width)
-    return html, errors
+    html = specific_template(grouped_files=filenames, columnwidth=column_width)
+    return html
 
 
 @view_config(route_name='directory')
@@ -159,20 +78,16 @@ def directory(request):
     relative_path = relative_path.decode('string-escape')
 
     # load settings, and reload if necessary
-    directory_settings = load_directory_settings(relative_path, request)
+    directory_settings = load_directory_settings(relative_path, request.registry.settings['directory_settings'])
 
-    # restructure files and split them according to their fileextension
-    if 'blacklist' in directory_settings:
-        visible_items_by_extension, visible_items, invisible_items = reorganize_files(listing, directory_settings['blacklist'])
-    else:
-        visible_items_by_extension, visible_items, invisible_items = reorganize_files(listing)
+    itemgrouper = ItemGrouper()
+    visible_items_by_extension = itemgrouper.group_folder(listing, directory_settings)
 
     # get the folders and files
     folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
     files = dict(visible_items_by_extension)
     if '' in files:
         del files['']
-    visible_items_by_extension['..'] = ['..']
 
     # apply templates
     errors = []
@@ -180,7 +95,7 @@ def directory(request):
         if 'specific_filetemplates' in directory_settings:
             if extension in directory_settings['specific_filetemplates']:
                 extension_specific = directory_settings['specific_filetemplates'][extension]
-                html, errors = apply_specific_templates(filenames, extension_specific)
+                html = apply_specific_templates(filenames, extension_specific)
                 visible_items_by_extension[extension] = [html]
             elif extension != '' and not extension == '..':
                 if 'file_template' in directory_settings:
@@ -192,9 +107,6 @@ def directory(request):
                     folder_template = PageTemplate(directory_settings['folder_template'])
                     tmp = [folder_template(item=file) for file in filenames]
                     visible_items_by_extension[extension] = tmp
-
-    if not request.matchdict['dir'] == '':
-        visible_items.insert(0, '..')
 
     directory_entry = render('template/directory.pt',
                              {'dir': request.matchdict['dir'],
