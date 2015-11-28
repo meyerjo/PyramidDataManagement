@@ -8,14 +8,7 @@ import views
 import os
 
 
-def serve(**settings):
-    config = Configurator(settings=settings)
-    config.include('pyramid_chameleon')
-    if settings['trace']:
-        config.include('pyramid_debugtoolbar')
-
-    config.registry.settings['directory_settings'] = dict()
-    config.registry.settings['reload_templates'] = True
+def load_directory_settings(config):
     for root, dirs, files in os.walk(config.registry.settings['root_dir']):
         root = os.path.abspath(root)
         if '.settings.json' in files:
@@ -42,6 +35,17 @@ def serve(**settings):
                 config.registry.settings['directory_settings'][root] = \
                     config.registry.settings['directory_settings'][path]
 
+def serve(**settings):
+    config = Configurator(settings=settings)
+    config.include('pyramid_chameleon')
+    if settings['trace']:
+        config.include('pyramid_debugtoolbar')
+
+    config.registry.settings['directory_settings'] = dict()
+    config.registry.settings['reload_templates'] = True
+
+    # load directory settings
+    load_directory_settings(config)
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
