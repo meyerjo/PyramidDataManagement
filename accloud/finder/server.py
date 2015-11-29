@@ -1,11 +1,10 @@
 '''HTTP Server and Request Handlers to explore ACcloud experiments'''
+import os
+from wsgiref.simple_server import make_server
+
 import jsonpickle
-from pyramid.httpexceptions import HTTPFound
 from pyramid.config import Configurator
 from pyramid.static import static_view
-from wsgiref.simple_server import make_server
-import views
-import os
 
 
 def load_directory_settings(config):
@@ -26,7 +25,8 @@ def load_directory_settings(config):
 
             settings_struct.update(config.registry.settings['directory_settings'][root])
             config.registry.settings['directory_settings'][root] = settings_struct
-            config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings['reload_templates']
+            config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings[
+                'reload_templates']
             config.registry.settings['directory_settings'][root]['path'] = filename
 
         else:
@@ -34,6 +34,7 @@ def load_directory_settings(config):
             if path in config.registry.settings['directory_settings']:
                 config.registry.settings['directory_settings'][root] = \
                     config.registry.settings['directory_settings'][path]
+
 
 def serve(**settings):
     config = Configurator(settings=settings)

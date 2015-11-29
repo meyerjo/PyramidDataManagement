@@ -114,6 +114,24 @@ def handle_report_request(request, relative_path, directory_settings):
         return Response(body=report.read(), content_type='application/pdf')
 
 
+def write_local_settings_file(request, directory_settings):
+    """
+    Creates the local settings file for the corresponding directory
+    :param request:
+    :param directory_settings:
+    :return:
+    """
+    relative_path = os.path.join(
+        request.registry.settings['root_dir'],
+        request.matchdict['dir'])
+    try:
+        with open(relative_path + '/.settings.json', 'w') as settings_file:
+            settings_file.write(jsonpickle.encode(directory_settings, unpicklable=False))
+        return None
+    except IOError as e:
+        return e.message
+
+
 @view_config(route_name='directory')
 def directory(request):
     relative_path = os.path.join(
@@ -126,10 +144,14 @@ def directory(request):
     # load settings, and reload if necessary
     directory_settings = load_directory_settings(relative_path, request.registry.settings['directory_settings'])
 
-    if 'presentation' in dict(request.params):
+    param_dict = dict(request.params)
+    if 'presentation' in param_dict:
         return handle_presentation_request(request, relative_path, directory_settings)
-    elif 'report' in dict(request.params):
+    elif 'report' in param_dict:
         return handle_report_request(request, relative_path, directory_settings)
+    elif 'createlocalsettingsfile' in param_dict:
+        # write the local settings file and then proceed
+        write_local_settings_file(request, directory_settings)
 
     itemgrouper = ItemGrouper()
     visible_items_by_extension = itemgrouper.group_folder(listing, directory_settings)
@@ -140,8 +162,7 @@ def directory(request):
     if '' in files:
         del files['']
 
-    # apply templates
-    errors = []
+    # apply specific to the items
     for (extension, filenames) in visible_items_by_extension.items():
         if 'specific_filetemplates' in directory_settings:
             if extension in directory_settings['specific_filetemplates']:
