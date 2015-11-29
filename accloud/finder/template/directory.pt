@@ -1,10 +1,10 @@
-Found dir: ${dir}
+Found dir: ${dir} <a href="?presentation"><i class="fa fa-desktop"></i></a>
     <ul metal:define-macro="filter_depth">
         <li tal:repeat="(key, values) sorted(visible_items_by_extension.items())">
             <div tal:condition="python: key.startswith('.') or not key">
                 <span tal:define="global extension key;"></span>
             </div>
-            <span tal:content="key"></span>
+            <span tal:content="key"></span><a href="?presentation&specific=${key}"><i class="fa fa-desktop"></i></a>
             <ul tal:condition="python: type(values) is not dict">
                 <li tal:repeat="value values">
                     <ul tal:condition="python: type(value) is dict" metal:use-macro="template.macro['filter_depth']"/>

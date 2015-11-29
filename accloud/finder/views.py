@@ -1,15 +1,19 @@
 import inspect
 import math
 import os
+import time
 from contextlib import contextmanager
 
 import jsonpickle as jsonpickle
+import pdfkit
 from chameleon import PageTemplate
+from markdown import markdown
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from accloud.finder.markdownexport import MarkdownExport, PresentationMarkdownExport
 from itemgrouper import ItemGrouper
 
 
@@ -68,6 +72,48 @@ def apply_specific_templates(filenames, extension_specific):
     return html
 
 
+def handle_presentation_request(request, relative_path, directory_settings):
+    """
+    Handles the request to present a folder or a specific filetype in a folder as a markdown based presentation
+    :param request:
+    :param relative_path:
+    :param directory_settings:
+    :return:
+    """
+    presmd = PresentationMarkdownExport(request)
+    specific_filetype = None
+    if 'specific' in dict(request.params):
+        specific_filetype = request.params['specific']
+    output = '# Presentation\n{0}\n---\n'.format(time.strftime('%d.%m.%Y'))
+    output += presmd.export_folder(relative_path, directory_settings, specific_filetype)
+    htmloutput = render('template/markdown_presentation.pt', dict(markdown=output))
+    return Response(htmloutput)
+
+
+def handle_report_request(request, relative_path, directory_settings):
+    """
+    Handles the PDF requests
+    :param request:
+    :param relative_path:
+    :param directory_settings:
+    :return:
+    """
+    mdexport = MarkdownExport(request)
+    specific_filetype = None
+    if 'specific' in dict(request.params):
+        specific_filetype = request.params['specific']
+    output = mdexport.export_folder(relative_path, directory_settings, specific_filetype)
+    html_text = markdown(output, output_format='html4')
+    # TODO: fix this Path problem
+    config = pdfkit.configuration(wkhtmltopdf='C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe')
+    # TODO: replace by mkdtemp
+    if not os.path.exists(relative_path + '/.temp/'):
+        os.mkdir(relative_path + '/.temp/')
+    pdfkit.from_string(html_text, relative_path + '/.temp/report.pdf', configuration=config)
+    with open(relative_path + '/.temp/report.pdf', 'rb') as report:
+        return Response(body=report.read(), content_type='application/pdf')
+
+
 @view_config(route_name='directory')
 def directory(request):
     relative_path = os.path.join(
@@ -79,6 +125,11 @@ def directory(request):
 
     # load settings, and reload if necessary
     directory_settings = load_directory_settings(relative_path, request.registry.settings['directory_settings'])
+
+    if 'presentation' in dict(request.params):
+        return handle_presentation_request(request, relative_path, directory_settings)
+    elif 'report' in dict(request.params):
+        return handle_report_request(request, relative_path, directory_settings)
 
     itemgrouper = ItemGrouper()
     visible_items_by_extension = itemgrouper.group_folder(listing, directory_settings)
