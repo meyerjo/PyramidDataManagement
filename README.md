@@ -54,14 +54,20 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
 
 
 # TODO
+## Done/Partial
 * new directories have to be detected and the directory_settings from the parent folder should be used - Done
-* Add a button which can be used to add an local .settings.json file which can later be edited
-* add a button to manipulate the .settings.json file
+* Add a button which can be used to add an local .settings.json file which can later be edited - Done
+* allow user to select plots over multiple folders in order to gnerate a report - partial
+    * allow user to select a folder or a specific filetype in a directory and create a presentation - done
+    * allow users to create a pdf report - partial
+        * images can't be included at the moment
+
+## Open
+* add a button/view to manipulate the .settings.json file
 * add favorite files, which can be displayed in other folders
 * file base preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
-* filename specific reload option ==> change the identificator for filespecific templates to a regex string
-* allow user to select plots over multiple folders in order to gnerate a report
-* allow user to add comments to a folder about informations contained
+* filename specific reload option ==> change the identificator for filespecific templates to a regex string (i.e. README.md)
+* allow user to add comments to a folder about comment contained
 * download a folder as zip container
 * download a specific subset as a zip container
 * allow to toggle entries
