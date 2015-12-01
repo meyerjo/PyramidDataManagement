@@ -10,6 +10,7 @@
             integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" tal:attributes="href request.route_url('static', subpath='css/bootstrap-inverse-btn.css')" />
+    <script tal:attributes="src request.route_url('static', subpath='js/toggle_listelement.js')"></script>
     <link rel="stylesheet" type="text/css" tal:attributes="href request.route_url('static', subpath='ekko-lightbox.min.css')"/>
     <script tal:attributes="src request.route_url('static', subpath='ekko-lightbox.min.js')"></script>
     <script>
