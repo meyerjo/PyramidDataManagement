@@ -67,9 +67,12 @@ def merge_several_runs(path, scenario_data=None):
 
     for folder in runs:
         relative_path = os.path.join(path, folder, path_to_runs)
-        run_results = fnmatch.filter(
-            os.listdir(relative_path),
-            'runs_and_results-it*.csv')        
+        try:
+            run_results = fnmatch.filter(
+                os.listdir(relative_path),
+                'runs_and_results-it*.csv')
+        except OSError:
+            continue      
 
         if len(run_results) == 0:
             continue
