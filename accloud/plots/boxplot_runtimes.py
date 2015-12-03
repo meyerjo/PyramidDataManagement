@@ -42,7 +42,7 @@ def main():
     print np.average(np.array([np.std(d) for d,_ in runtime_data])/np.array([np.mean(d) for d,_ in runtime_data]))
     print(tabulate.tabulate(table, header, tablefmt=args.tablefmt))
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8.22, 5.08), dpi=300)
     boxplot = fig.add_subplot(111)
     boxplot.boxplot([time for (time, label) in runtime_data], vert=False)
     boxplot.yaxis.set_ticklabels(
