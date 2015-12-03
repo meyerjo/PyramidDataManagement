@@ -77,7 +77,7 @@ def merge_several_runs(path, scenario_data=None):
         if len(run_results) == 0:
             continue
 
-        scenario = folder[:-3]
+        scenario = folder[:-11] if folder.endswith('default') else folder[:-3]
 
         merged_results = scenario_data.setdefault(scenario, SmacResult())
 

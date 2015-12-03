@@ -20,17 +20,24 @@ def main():
 
     scenario_data = AclibResult.merge_several_runs(args.path)
 
+    timeouts = 0
     runtime_data = []  # (runtime, label)
     for scenario, data in scenario_data.iteritems():
         response = np.array([float(r['Response Value (y)'])
                              for r in data.results])
         if not args.timeouts and np.median(response) == 300:
+            timeouts += 1
             continue
         runtime_data.append((response, scenario))
+
+    if not args.timeouts:
+        print('Filtered %d timeouts' % timeouts)
 
     runtime_data = sorted(runtime_data, key=lambda d: np.median(d[0]))
 
     def ratio_outliers(data, m = 2.):
+        if len(data) == 1:
+            return 0.0
         d = np.abs(data - np.median(data))
         mdev = np.median(d)
         s = d/mdev if mdev else 0.
