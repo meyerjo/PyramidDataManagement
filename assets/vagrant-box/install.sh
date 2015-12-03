@@ -1,18 +1,17 @@
 #!/bin/bash
 
+# Do not provision if experiment in screen is already running
 SCREENS_RUNNING=`sudo -u aclib screen -ls | grep -E 'There (is a|are) screens? on:'`
 if [ $? -eq 0 ]; then
-    >&2 echo "An instance of aclib is already running."
-    >&2 echo $SCREENS_RUNNING
-    >&2 echo "To reattach to the experiment run vagrant ssh"
-    >&2 echo "and eventually stop the experiment"
-    >&2 echo "Aborting provisioning"
+    >&2 echo "[ACcloud][INFO]An instance of aclib is already running."
+    >&2 echo "[ACcloud][INFO]$SCREENS_RUNNING"
+    >&2 echo "[ACcloud][INFO]To reattach to the experiment run vagrant ssh"
+    >&2 echo "[ACcloud][INFO]and eventually stop the experiment"
+    >&2 echo "[ACcloud][INFO]Aborting provisioning"
     exit 1
 fi
 
-echo "#############################"
-echo "# Executing install scripts #"
-echo "#############################"
+echo "[ACcloud][INFO] Install AClib dependencies"
 
 # Update if last update is older than 1 day
 # Probs to http://askubuntu.com/questions/487606/bash-update-apt-get-only-if-apt-cache-is-older-than-10-minutes
