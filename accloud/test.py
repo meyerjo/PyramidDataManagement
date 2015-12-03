@@ -2,12 +2,24 @@ from __future__ import division
 import numpy as np
 from multiprocessing import Pool, cpu_count
 from itertools import combinations
+from math import factorial as bang
+import logging
 
-numSamples = 10000
 seed = 1337
 
+def hybrid_permutation(y, z, max_comparision=100000):
+    n = y.size + z.size
+    r = y.size
 
-def permutation(y, z):
+    exact_comparisions = bang(n) / bang(r) / bang(n-r)
+
+    if exact_comparisions > max_comparision:
+        logging.warn('Using approximate test with %d samples' % max_comparision)
+        return permutation(y, z, max_comparision)
+    else:
+        return exact_permutation(y, z)
+
+def permutation(y, z, numSamples=100000):
     """1-sided permutation significance test
     :param y Numpy array
     :param z Numpy array
@@ -28,7 +40,7 @@ def permutation(y, z):
     delta = z.mean() - y.mean()
     estimates = np.array(map(run_permutation_test , range(numSamples)))
     diffCount = len(np.where(estimates <=delta)[0])
-    return 1.0 - (diffCount / numSamples)
+    return 1.0 - (diffCount / numSamples), delta
 
 def exact_permutation(y, z):
 
@@ -51,7 +63,7 @@ def exact_permutation(y, z):
 
     estimates = np.array(map(run_permutation_test, zip(groupZ, groupY)))
     diffCount = len(np.where(estimates <=delta)[0])
-    return 1.0 - (diffCount / len(groupY))
+    return 1.0 - (diffCount / len(groupY)), delta
 
 
 if __name__ == '__main__':
