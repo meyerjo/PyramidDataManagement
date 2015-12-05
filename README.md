@@ -61,14 +61,14 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
     * allow user to select a folder or a specific filetype in a directory and create a presentation - done
     * allow users to create a pdf report - partial
         * images can't be included at the moment
+* allow to toggle entries - done
 
 ## Open
 * add a button/view to manipulate the .settings.json file
 * add favorite files, which can be displayed in other folders
-* file base preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
+* file-based preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
 * filename specific reload option ==> change the identificator for filespecific templates to a regex string (i.e. README.md)
 * allow user to add comments to a folder about comment contained
 * download a folder as zip container
 * download a specific subset as a zip container
-* allow to toggle entries
 * user authentication
