@@ -30,7 +30,7 @@ def open_resource(filename, mode="r"):
             f.close()
 
 
-def load_directory_settings(directorypath, directorysettings):
+def load_directory_settings(basepath, directorypath, directorysettings):
     """
     Load the directory settings for the specific directory. Checks if it is indicated that a reload is required.
     :param directorypath: Path of the folder, which should load the files
@@ -54,7 +54,10 @@ def load_directory_settings(directorypath, directorysettings):
         previous_folder = os.path.abspath(directorypath + '/../')
         previous_folder = previous_folder.encode('string-escape')
         previous_folder = previous_folder.decode('string-escape')
-        return load_directory_settings(previous_folder, directorysettings)
+        if directorypath == basepath:
+            return dict()
+
+        return load_directory_settings(basepath, previous_folder, directorysettings)
 
 
 def apply_specific_templates(filenames, extension_specific):
@@ -142,7 +145,7 @@ def directory(request):
     relative_path = relative_path.decode('string-escape')
 
     # load settings, and reload if necessary
-    directory_settings = load_directory_settings(relative_path, request.registry.settings['directory_settings'])
+    directory_settings = load_directory_settings(request.registry.settings['root_dir'], relative_path, request.registry.settings['directory_settings'])
 
     param_dict = dict(request.params)
     if 'presentation' in param_dict:
