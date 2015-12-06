@@ -42,8 +42,9 @@
                     </ul>
                 </li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a class="btn btn-inverse btn-md" href="?createlocalsettingsfile">Create local settings file</a></li>
+            <ul class="nav navbar-nav navbar-right" tal:condition="exists: localsettingsfile">
+                <li><a class="btn btn-inverse btn-md" href=".settings.json" tal:condition="localsettingsfile">Update local settings file</a></li>
+                <li><a class="btn btn-inverse btn-md" href="?createlocalsettingsfile" tal:condition="not localsettingsfile">Create local settings file</a></li>
             </ul>
         </div>
     </div>

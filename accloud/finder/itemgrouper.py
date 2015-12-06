@@ -194,4 +194,4 @@ class ItemGrouper:
                     groupedfiles, errors = self._group_files_by_specific_criteria(filenames, extension_specific)
                     visible_items_by_extension[extension] = groupedfiles
 
-        return visible_items_by_extension
+        return visible_items_by_extension, visible_items, invisible_items

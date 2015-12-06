@@ -157,7 +157,7 @@ def directory(request):
         write_local_settings_file(request, directory_settings)
 
     itemgrouper = ItemGrouper()
-    visible_items_by_extension = itemgrouper.group_folder(listing, directory_settings)
+    visible_items_by_extension, vi, invitems = itemgrouper.group_folder(listing, directory_settings)
 
     # get the folders and files
     folders = visible_items_by_extension[''] if '' in visible_items_by_extension else []
@@ -187,6 +187,8 @@ def directory(request):
                              {'dir': request.matchdict['dir'],
                               'visible_items_by_extension': visible_items_by_extension})
 
+    localsettingsfile = '.settings.json' in invitems
+
     # TODO: load the directory script dynamically
     script_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     # print os.path.exists(script_folder + '/template/directory.pt')
@@ -194,5 +196,6 @@ def directory(request):
     html = render('template/index.pt', {'request': request,
                                         'html': directory_entry,
                                         'folders': folders,
-                                        'files': files})
+                                        'files': files,
+                                        'localsettingsfile': localsettingsfile})
     return Response(html)
