@@ -27,12 +27,15 @@ class filespecifivviews:
             finally:
                 f.close()
 
+    def _requestpath(self):
+        return os.path.join(
+            self.request.registry.settings['root_dir'],
+            self.request.matchdict['file'])
+
     @view_config(route_name='csv', renderer='template/index.pt')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
-        relative_path = os.path.join(
-            self.request.registry.settings['root_dir'],
-            self.request.matchdict['file'])
+        relative_path = self._requestpath()
         auto_detect_delimiter = False
         if 'delimiter' in self.request.matchdict:
             delimit = str(self.request.matchdict['delimiter'])
@@ -62,13 +65,11 @@ class filespecifivviews:
                 <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
                 </table>''')
             table_html = table(table=reader)
-            return {"request": self.request, "html": table_html, "files": dict(), "folders": ['.', '..']}
+            return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'])
 
     @view_config(route_name='markdown', renderer='template/index.pt')
     def markdown(self):
-        markdown_path = os.path.join(
-            self.request.registry.settings['root_dir'],
-            self.request.matchdict['file'])
+        markdown_path = self._requestpath()
         with self.open_resource(markdown_path) as markdown_file:
             source = markdown_file.read()
             source = str(source)
@@ -76,15 +77,44 @@ class filespecifivviews:
                 hoedown.HtmlRenderer(hoedown.HTML_TOC_TREE),
                 hoedown.EXT_TABLES).render(source)
             html = render('template/markdown.pt', {"request": self.request, "html": html})
-        return {"request": self.request, "html": html, "files": dict(), "folders": ['.', '..']}
+        return dict(request=self.request, html=html, files=dict(), folders=['.', '..'])
 
     @view_config(route_name='matlab', renderer='template/index.pt')
     def matlab(self):
-        matlab_path = os.path.join(
-            self.request.registry.settings['root_dir'],
-            self.request.matchdict['file'])
+        matlab_path = self._requestpath()
 
         with self.open_resource(matlab_path) as matlab_file:
             source = matlab_file.read()
             matlab_html = render('template/matlab.pt', {"request": self.request, "html": source})
-            return {"request": self.request, "html": matlab_html, "files": dict(), "folders": ['.', '..']}
+            return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'])
+
+    @view_config(route_name='jsonviewer', renderer='template/index.pt')
+    def jsonview(self):
+        jsonpath = self._requestpath()
+        if not os.path.exists(jsonpath):
+            return dict(request=self.request, html='', files=dict(), folders=['.', '..'])
+
+        params_json = dict(self.request.params)
+        print(params_json)
+        if 'savesettings' in params_json:
+            if 'json' in params_json:
+                jsontext = params_json['json']
+                print(jsontext)
+                # with open(jsonpath, 'w') as jsonfile:
+                #     jsonfile.write(jsontext)
+
+        with self.open_resource(jsonpath) as json:
+            source = json.read()
+            json_html = render('template/json_view.pt', dict(request=self.request,
+                                                             jsonencoded=source,
+                                                             filename=self.request.matchdict['file']))
+            return dict(request=self.request,
+                        html=json_html,
+                        files=dict(),
+                        folders=['.', '..'])
+
+    @view_config(route_name='jsonviewer_plain', renderer='json')
+    def json_plain(self):
+        jsonpath = self._requestpath()
+        with self.open_resource(jsonpath) as file:
+            return file.read()
