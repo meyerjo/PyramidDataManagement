@@ -6,7 +6,7 @@ Found dir: ${dir} <a href="?presentation" alt="Create presentation"><i class="fa
             </div>
             <span tal:content="key" class="keyelement"></span><a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
             <ul tal:condition="python: not isinstance(values, dict)" class="fa-ul">
-                <li tal:repeat="value values">
+                <li tal:repeat="value sorted(values)">
                     <ul tal:condition="python: isinstance(value, dict)" metal:use-macro="template.macro['filter_depth']"/>
                     <span tal:condition="python: not isinstance(value, dict)">
                         <div tal:condition="python: value.startswith('<')">
