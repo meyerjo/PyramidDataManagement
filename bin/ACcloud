@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 import argparse
-from config import Config
 from parser.run_parser import CMD_Parser
 from accloud.run import Run
 
@@ -54,16 +53,16 @@ def main():
         cloud.add_argument("--job_cores", dest="job_cores", default=1, type=int, help="number of cores per configuration job")
         cloud.add_argument("--job_memory", dest="job_memory", default=2000, type=int, help="memory per *core* (in MB) for a job on *orcinus* (if cluster supports this limit)")
         cloud.add_argument("--multi_machine", default=1, type=int)
-        cloud.add_argument("--auto-teardown", action='store_true', help='Automatically pull the results and destroy the machine')
+        cloud.add_argument("--auto-teardown", dest="auto_teardown", action='store_true', help='Automatically pull the results and destroy the machine')
 
     command._parser_class = ExtendableSubparser
-    cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
+    cmd_parser = CMD_Parser('Licence', 'Version', './')
     init = command.add_parser('init', parser=cmd_parser.parser)
     init.set_defaults(func=Run.create)
     init.set_defaults(sub=init)
     add_cloud_arguments(init)
 
-    cmd_parser = CMD_Parser('Licence', 'Version', '/home/gothm/aclib')
+    cmd_parser = CMD_Parser('Licence', 'Version', './')
     run = command.add_parser('run', parser=cmd_parser.parser)
     run.set_defaults(func=Run.run)
     run.set_defaults(sub=run)
@@ -74,6 +73,7 @@ def main():
     pull.set_defaults(sub=pull)
 
     start = command.add_parser('start')
+    # start.add_argument('--force', '-f', dest='provision', action='store_true')
     start.set_defaults(func=Run.start)
     start.set_defaults(sub=start)
 
@@ -89,6 +89,9 @@ def main():
     destroy.set_defaults(func=Run.destroy)
     destroy.set_defaults(sub=destroy)
 
+    link = command.add_parser('link')
+    link.set_defaults(func=Run.link)
+    link.set_defaults(sub=link)
 
     args = parser.parse_args()
 

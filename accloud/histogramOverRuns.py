@@ -17,18 +17,19 @@ def main():
     results = csv.reader(every_second_line)
     runtimes = np.array([float(column[1]) for column in results])
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(5.7, 3.52), dpi=300)
     histogram = fig.add_subplot(111)
 
     histogram.hist(
         runtimes,
         bins=50)
-    histogram.xaxis.set_label_text('runtime [s]')
-    histogram.yaxis.set_label_text('#runs')
+    histogram.xaxis.set_label_text('Runtime [s]')
+    histogram.yaxis.set_label_text('Number of Runs')
 
     plt.title(os.path.basename(args.responses.name))
     if args.save:
-        path = args.responses.name + '.png'
+        fig.tight_layout()
+        path = args.responses.name + '.pdf'
         plt.savefig(path)
         print('Saved to "{}"'.format(path))
     else:

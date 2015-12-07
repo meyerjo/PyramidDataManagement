@@ -12,7 +12,7 @@ class Config(object):
             if isinstance(value, dict):
                 self.config[key] = Config(value)
             if isinstance(value, list):
-                self.config[key] = list(Config(v) for v in value)
+                self.config[key] = list(Config(v) if isinstance(v, dict) else v for v in value)
 
     def update(self, other):
         for key, value in other.config.iteritems():
@@ -147,5 +147,6 @@ DEFAULT_CONFIG = {
             "location": Required()
         },
         "multi-machine": 1
-    }
+    },
+    "emails": ["accloud@ziisch.de"]
 }

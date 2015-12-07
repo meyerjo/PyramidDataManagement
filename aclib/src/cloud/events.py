@@ -22,7 +22,7 @@ The configuration has finished.
 This is is an automatically generated email, please do not reply.
 '''
 
-class FailMail(MailEvent)
+class FailMail(MailEvent):
     subject = 'Configuration failed'
     message = '''Dear user,
 

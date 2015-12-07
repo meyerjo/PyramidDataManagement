@@ -2,41 +2,44 @@
 
 '''Draw boxplot from average validation results'''
 
-from paths import validationResultPaths
-import AclibResult
+from accloud import AclibResult, paths
 import argparse
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def runtimeFromMergedValidations(files):
-    return np.array([np.genfromtxt(f, delimiter=',', skip_header=True, usecols=(2)) for f in files])
-
+import os
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('files', nargs='+')
     parser.add_argument('--verbose', '-v', action='count', default=0)
+    parser.add_argument('--output', '-o', help='Name for output files')
+    parser.add_argument('--objective', choices=['runtime', 'quality'], default='runtime')
     args = parser.parse_args()
 
     logging.getLogger().setLevel(max(10, args.verbose * -10 + 40))
 
-    scenario_data = [runtimeFromMergedValidations(validationResultPaths(d)) for d in args.files]
+    names, scenario_data = paths.sorted_scenario_data(args.files, objective=args.objective)
 
-    scenario_runtimes = []
-    labels = []
-
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 5))
+    fig.suptitle(os.path.dirname(args.files[0]).replace('_', '-'))
     boxplot = fig.add_subplot(111)
-    boxplot.boxplot(scenario_data)
-    boxplot.xaxis.set_ticklabels(args.files, rotation='vertical')
-    boxplot.xaxis.set_label_text('scenario')
-    boxplot.set_yscale('log')
-    boxplot.yaxis.set_label_text('runtime [s]')
-
+    boxplot.boxplot(scenario_data, showfliers=False)
+    for i, data in enumerate(scenario_data):
+        x = np.random.normal(i + 1, 0.01, size=len(data))
+        boxplot.scatter(x, data, marker='.', color='r', alpha=0.4)
+    boxplot.xaxis.set_ticklabels(map(os.path.basename, names), rotation=90)
+    boxplot.xaxis.set_label_text('Machine')
+    if args.objective == 'runtime':
+        boxplot.set_yscale('log')
+        boxplot.yaxis.set_label_text('Validation Mean Runtime [s]')
+    else:
+        boxplot.yaxis.set_label_text('Validation Mean Quality')
     plt.show()
-
+    if args.output:
+        fig.tight_layout()  
+        fig.savefig('%s.pdf' % args.output, bb_inches='tight', transparent=True)
+        fig.savefig('%s.png' % args.output, dpi=300, bb_inches='tight')
 
 if __name__ == '__main__':
     main()

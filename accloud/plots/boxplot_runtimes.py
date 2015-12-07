@@ -2,31 +2,54 @@
 
 '''Create boxplots of single runtimes of a target algorithm'''
 
-from tools import ReadableDir
-import AclibResult
+from __future__ import division
+from accloud.tools import ReadableDir
+from accloud import AclibResult
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import tabulate
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', action=ReadableDir)
     parser.add_argument('--timeouts', action='store_true')
+    parser.add_argument('--tablefmt', choices=tabulate.tabulate_formats, default='pipe')
     args = parser.parse_args()
 
     scenario_data = AclibResult.merge_several_runs(args.path)
 
+    timeouts = 0
     runtime_data = []  # (runtime, label)
     for scenario, data in scenario_data.iteritems():
         response = np.array([float(r['Response Value (y)'])
                              for r in data.results])
         if not args.timeouts and np.median(response) == 300:
+            timeouts += 1
             continue
         runtime_data.append((response, scenario))
 
+    if not args.timeouts:
+        print('Filtered %d timeouts' % timeouts)
+
     runtime_data = sorted(runtime_data, key=lambda d: np.median(d[0]))
-    fig = plt.figure()
+
+    def ratio_outliers(data, m = 2.):
+        if len(data) == 1:
+            return 0.0
+        d = np.abs(data - np.median(data))
+        mdev = np.median(d)
+        s = d/mdev if mdev else 0.
+        return len(data[s>m]) / len(data)
+
+    header = ['Scenario', 'Median', 'Mean', 'Std', 'Ratio Outliers']
+    table = [[name, '%.2f' % np.median(data), '%.2f' % np.mean(data), '%.2f' % np.std(data), '%.2f' % ratio_outliers(data)] for data, name in runtime_data]
+    print np.corrcoef([np.std(d) for d,_ in runtime_data],[np.mean(d) for d,_ in runtime_data])
+    print np.average(np.array([np.std(d) for d,_ in runtime_data])/np.array([np.mean(d) for d,_ in runtime_data]))
+    print(tabulate.tabulate(table, header, tablefmt=args.tablefmt))
+
+    fig = plt.figure(figsize=(8.22, 5.08), dpi=300)
     boxplot = fig.add_subplot(111)
     boxplot.boxplot([time for (time, label) in runtime_data], vert=False)
     boxplot.yaxis.set_ticklabels(

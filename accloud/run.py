@@ -44,6 +44,7 @@ class Run(object):
             return False
 
     def link(self):
+        self.config.expand()
         files = []
 
         for experiment in self.config.experiments:
@@ -53,9 +54,13 @@ class Run(object):
                 aclib_config = json.load(config_file)
                 scenario = aclib_config['scenarios'][experiment.scenario]
                 files.append(scenario['pcs'])
-                files.append(scenario['scenario'])
+                files.append(experiment.config_file)
 
-                instance = aclib_config['instances'][scenario.instances]
+                instance = aclib_config['instances'][scenario['instances']]
+                files.append(os.path.join(
+                             'scenarios',
+                             instance['problem_type'],
+                             experiment.scenario))
                 files.append(os.path.join(
                     'instances',
                     instance['problem_type'],
@@ -67,7 +72,7 @@ class Run(object):
                     'sets',
                     scenario['instances']))
 
-                algorithm = aclib_config['algorithms'][scenario.algorithm]
+                algorithm = aclib_config['algorithms'][scenario['algorithm']]
                 files.append(os.path.join(
                     'target_algorithms',
                     algorithm['problem_type'][0]
@@ -76,8 +81,8 @@ class Run(object):
                     scenario['algorithm']))
 
         def create_link(directory):
-            target = os.path.split(os.path.join(self.path, 'aclib', directory))
-            os.makedirs(self.path.dirname(target))
+            folders, symlink = os.path.split(os.path.join(self.path, 'aclib', directory))
+            os.makedirs(folders)
             os.symlink(
                 os.path.join(self.config.aclib_root, directory),
                 os.path.join(folders, symlink))
@@ -87,7 +92,8 @@ class Run(object):
         for f in sorted(files):
             if essential_links and f.startswith(essential_links[-1]):
                 continue
-            else essential_links.append(f)
+            else:
+                essential_links.append(f)
 
         for link in essential_links:
             create_link(link)
@@ -114,11 +120,11 @@ class Run(object):
                 'multi-machine': kwargs['multi_machine']
             },
             'include': ['~/.accloud/credentials.json'],
-            'auto_teardown': kwargs['auto-teardown']
+            'auto_teardown': kwargs['auto_teardown']
         }
 
         if kwargs['instance']:
-            config['machine'][kwargs['provider']]['instance'] = kwargs['instance']
+            config['machine'][kwargs['provider']]['category'] = kwargs['instance']
         else:
             config['machine']['cores'] = kwargs['job_cores']
             config['machine']['memory'] = kwargs['job_memory']
@@ -132,7 +138,8 @@ class Run(object):
         with open(path.join(self.path, 'Vagrantfile'), 'w') as vagrantfile:
             vagrantfile.write('''
 Vagrant.configure(2) do |config|
-  config.vm.box = "ac-cloud"%s
+  config.vm.box = "ac-cloud"
+  config.vm.box_version = "0.2.0"%s
 end
 ''' % ('\n' + multi_machine_config if kwargs['multi_machine'] > 1 else ''))
 
@@ -232,7 +239,7 @@ end
     def call(self, *args):
         arguments = list(args)
         arguments.insert(0, 'vagrant')
-        result = 'Error in function call {}'.format(' '.join(args))
+        result = 'Error in function call {}'.format(' '.join(map(str, args)))
         try:
             result = subprocess.check_call(arguments, cwd=self.path)
             return result

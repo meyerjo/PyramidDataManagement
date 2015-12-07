@@ -51,7 +51,7 @@ def main():
 
     # Wait until processes finish or for user interrupt
     try:
-        map(Process.join, run_processes)
+        map(ExperimentRunner.join, run_processes)
     except KeyboardInterrupt:
         print("\nExiting due to user interrupt", file=sys.stderr)
         sys.exit(1)

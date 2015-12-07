@@ -1,5 +1,6 @@
-%.box: .git/COMMIT_EDITMSG
-	git archive --format tar -o $@ HEAD
+%.box: .bashrc Vagrantfile aclib.sh install.sh
+	tar cf $@ .bashrc Vagrantfile aclib.sh install.sh
+	tar rf $@ ../../aclib/*	-C ../..
 	echo "{\"provider\":\"$(basename $@)\"}" > $@.tmp.json
 	chown gothm:student $@.tmp.json
 	tar rf $@ $@.tmp.json --transform "s|$@.tmp.json|metadata.json|"
