@@ -9,6 +9,7 @@ from pyramid.response import Response
 from pyramid.view import view_config
 from accloud.finder.directoryExportHandlers import PresentationExportHandler, ReportExportHandler
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings, DirectoryCreateLocalSettings
+from accloud.finder.directoryZipHandler import DirectoryZipHandler
 from itemgrouper import ItemGrouper
 
 
@@ -84,6 +85,8 @@ def directory(request):
     elif 'createlocalsettingsfile' in param_dict:
         # write the local settings file and then proceed
         DirectoryCreateLocalSettings.handle_request(request, relative_path, directory_settings)
+    elif 'zipfile' in param_dict:
+        return DirectoryZipHandler.handle_request(request, relative_path, directory_settings)
 
     itemgrouper = ItemGrouper()
     visible_items_by_extension, vi, invitems = itemgrouper.group_folder(listing, directory_settings)

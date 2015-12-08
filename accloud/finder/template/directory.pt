@@ -1,10 +1,14 @@
-Found dir: ${dir} <a href="?presentation" alt="Create presentation"><i class="fa fa-desktop"></i></a>
+Found dir: ${dir}
+    <a href="?presentation" alt="Create presentation"><i class="fa fa-desktop"></i></a>
+    <a href="?zipfile" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
     <ul metal:define-macro="filter_depth" >
         <li tal:repeat="(key, values) sorted(visible_items_by_extension.items())">
             <div tal:condition="python: key.startswith('.') or not key">
                 <span tal:define="global extension key;"></span>
             </div>
-            <span tal:content="key" class="keyelement"></span><a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
+            <span tal:content="key" class="keyelement"></span>
+                <a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
+                <a href="?zipfile&specific=${key}" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
             <ul tal:condition="python: not isinstance(values, dict)" class="fa-ul">
                 <li tal:repeat="value sorted(values)">
                     <ul tal:condition="python: isinstance(value, dict)" metal:use-macro="template.macro['filter_depth']"/>
