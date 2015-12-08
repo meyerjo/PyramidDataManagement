@@ -68,7 +68,7 @@ class MarkdownExport:
 
         # filter the folder content
         itemgrouper = ItemGrouper()
-        visible_items_by_extension = itemgrouper.group_folder(listing, directory_settings)
+        visible_items_by_extension, visibleitems, invisibleitems = itemgrouper.group_folder(listing, directory_settings)
 
 
         # filter the specific file extension
@@ -137,7 +137,7 @@ class PresentationMarkdownExport(MarkdownExport):
                 elif isinstance(item, unicode) or isinstance(item, str):
                     output += '{0} {1}\n'.format('*', item, lastkey)
                 else:
-                    self._log.warning('The type is unknown {0}'.format(str(type(item))))
+                    print('The type is unknown {0}'.format(str(type(item))))
             output += '\n'
             return output
         elif isinstance(items, dict):
@@ -151,7 +151,7 @@ class PresentationMarkdownExport(MarkdownExport):
                 output += '---\n\n'
             return output
         else:
-            self._log.warning('Something went wrong. The type {0} is unexpected'.format(str(type(items))))
+            print('Something went wrong. The type {0} is unexpected. {1}'.format(str(type(items)), str(items)))
             return ''
 
     def _markdown_table(self, items, expected_items):
