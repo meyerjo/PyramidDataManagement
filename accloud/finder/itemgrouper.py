@@ -20,7 +20,7 @@ class ItemGrouper:
         for i, item_a in enumerate(input):
             for j, item_b in enumerate(input):
                 if i == j:
-                    matrix[i, j] = sys.maxint - 1
+                    matrix[i, j] = sys.maxint - 1000
                 else:
                     matrix[i, j] = distance(item_a, item_b)
         return matrix
