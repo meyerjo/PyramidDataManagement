@@ -24,8 +24,8 @@
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header" tal:switch="exists: pagetitle">
-            <a class="navbar-brand" href="#" tal:case="True" tal:content="pagetitle"></a>
-            <a class="navbar-brand" href="#" tal:case="False">Dataset Browser</a>
+            <a class="navbar-brand" href="/" tal:case="True" tal:content="pagetitle"></a>
+            <a class="navbar-brand" href="/" tal:case="False">Dataset Browser</a>
         </div>
         <div>
             <ul class="nav navbar-nav">
