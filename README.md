@@ -65,11 +65,11 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
 * download a folder as zip container - done
 * download a specific subset as a zip container - done
 * add a button/view to manipulate the .settings.json file - done
+* filename specific preview option ==> change the identificator for filespecific templates to a regex string (i.e. README.md) - done
 
 ## Open
 * add favorite files, which can be displayed in other folders
 * file-based preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
-* filename specific preview option ==> change the identificator for filespecific templates to a regex string (i.e. README.md)
 * allow user to add comments to a folder about content contained
   * add a inputbox to each row or use something like a feedback slider (e.g https://github.com/vedmack/feedback_me)
 * disable specific keys in folder/presentation view
