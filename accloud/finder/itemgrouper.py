@@ -1,7 +1,6 @@
 import mimetypes
 import os
 import re
-
 import numpy
 import sys
 from Levenshtein._levenshtein import distance
@@ -11,12 +10,14 @@ class ItemGrouper:
     def __init__(self):
         pass
 
-    def _compute_edit_distance_matrix(self, input):
+    @staticmethod
+    def _compute_edit_distance_matrix(input):
         """
         Computes the edit distance between the
         :param input:
         :return:
         """
+        assert(isinstance(input, list))
         matrix = numpy.zeros(shape=(len(input), len(input)))
         for i, item_a in enumerate(input):
             for j, item_b in enumerate(input):
@@ -84,38 +85,11 @@ class ItemGrouper:
             groups.append(tmp_group)
         return groups
 
-    def _reorganize_files_by_extension(self, files, blacklist=None):
-        if not blacklist:
-            blacklist = []
-        visible_items_by_extension = dict()
-        visible_items = []
-        invisible_items = []
-        for item in files:
-            filename, file_extension = os.path.splitext(item)
-            if not item.startswith('.'):
-                skipfile = False
-                for rule in blacklist:
-                    if rule == '':
-                        continue
-                    if re.search(rule, item) is not None:
-                        skipfile = True
-                        break
-                if skipfile:
-                    continue
-                visible_items.append(item)
-                if file_extension in visible_items_by_extension:
-                    visible_items_by_extension[file_extension].append(item)
-                else:
-                    visible_items_by_extension[file_extension] = [item]
-            else:
-                invisible_items.append(item)
-        return visible_items_by_extension, visible_items, invisible_items
-
-    def _reorganize_files(self, files,  specific_filter_criteria=None, blacklist=None):
+    def _reorganize_files(self, files, specific_filter_criteria=None, blacklist=None):
         if not blacklist:
             blacklist = []
         if not specific_filter_criteria:
-            specific_filter_criteria=[]
+            specific_filter_criteria = []
 
         items_dict = dict()
         visible_items = []
@@ -148,8 +122,6 @@ class ItemGrouper:
                                 element_to_validate = mimetypes.guess_type(file)[0]
                                 if element_to_validate is None:
                                     continue
-                            print(truncated_criteria)
-                            print(element_to_validate)
                             if re.search(truncated_criteria, element_to_validate) is not None:
                                 if specific_criteria not in items_dict:
                                     items_dict[specific_criteria] = [file]
@@ -239,14 +211,19 @@ class ItemGrouper:
 
     def group_folder(self, files, directory_settings):
         # restructure files and split them according to their fileextension
+        blacklist = None
+        special_filter_criteria = None
         if 'blacklist' in directory_settings:
-            # visible_items_by_extension, visible_items, invisible_items = \
-            #     self._reorganize_files(files, ['regex:README\.md$', 'mimetype:^image'], directory_settings['blacklist'])
-            visible_items_by_extension, visible_items, invisible_items = \
-                self._reorganize_files_by_extension(files,  directory_settings['blacklist'])
-        else:
-            visible_items_by_extension, visible_items, invisible_items = \
-                self._reorganize_files_by_extension(files)
+            blacklist = directory_settings['blacklist']
+        if 'specific_filetemplates' in directory_settings:
+            spec_ft = directory_settings['specific_filetemplates']
+            if isinstance(spec_ft, dict):
+                special_filter_criteria = spec_ft.keys()
+
+        visible_items_by_extension, visible_items, invisible_items = self._reorganize_files(files,
+                                                                                            special_filter_criteria,
+                                                                                            blacklist)
+
         visible_items_by_extension['..'] = ['..']
 
         # filter files
