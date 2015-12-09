@@ -22,12 +22,18 @@ def load_directory_settings(config):
             with open(os.path.join(filename), "r") as myfile:
                 data = myfile.read()
                 settings_struct = jsonpickle.decode(data)
+                if not isinstance(settings_struct, dict):
+                    settings_struct = jsonpickle.decode(settings_struct)
 
-            settings_struct.update(config.registry.settings['directory_settings'][root])
-            config.registry.settings['directory_settings'][root] = settings_struct
-            config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings[
-                'reload_templates']
-            config.registry.settings['directory_settings'][root]['path'] = filename
+            try:
+                settings_struct.update(config.registry.settings['directory_settings'][root])
+                config.registry.settings['directory_settings'][root] = settings_struct
+                config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings[
+                    'reload_templates']
+                config.registry.settings['directory_settings'][root]['path'] = filename
+            except Exception as e:
+                print(e.message)
+
         else:
             path = os.path.abspath(root + '/..')
             if path in config.registry.settings['directory_settings']:

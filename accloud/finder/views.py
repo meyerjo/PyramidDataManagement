@@ -2,6 +2,8 @@ import inspect
 import math
 import os
 from contextlib import contextmanager
+
+import jsonpickle
 from chameleon import PageTemplate
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render

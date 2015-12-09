@@ -1,14 +1,18 @@
 import csv
-import os
-from contextlib import contextmanager
 import hoedown
+import os
+import shutil
+from contextlib import contextmanager
+import HTMLParser
 
-import sys
+import jsonpickle
 from chameleon import PageTemplate
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
+
+from accloud.finder.directorySettingsHandler import DirectoryUpdateLocalSettings
 
 
 class filespecifivviews:
@@ -95,23 +99,15 @@ class filespecifivviews:
             return dict(request=self.request, html='', files=dict(), folders=['.', '..'])
 
         params_json = dict(self.request.params)
-        print(params_json)
-        if 'savesettings' in params_json:
-            if 'json' in params_json:
-                jsontext = params_json['json']
-                print(jsontext)
-                # with open(jsonpath, 'w') as jsonfile:
-                #     jsonfile.write(jsontext)
+        if 'updatelocalsettingsfile' in params_json and 'newsettings' in params_json:
+            return DirectoryUpdateLocalSettings.handle_request(self.request, jsonpath, None)
 
         with self.open_resource(jsonpath) as json:
             source = json.read()
             json_html = render('template/json_view.pt', dict(request=self.request,
                                                              jsonencoded=source,
                                                              filename=self.request.matchdict['file']))
-            return dict(request=self.request,
-                        html=json_html,
-                        files=dict(),
-                        folders=['.', '..'])
+            return dict(request=self.request, html=json_html, files=dict(), folders=['.', '..'])
 
     @view_config(route_name='jsonviewer_plain', renderer='json')
     def json_plain(self):

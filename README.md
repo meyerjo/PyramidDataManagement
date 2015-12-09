@@ -64,9 +64,9 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
 * allow to toggle entries - done
 * download a folder as zip container
 * download a specific subset as a zip container
+* add a button/view to manipulate the .settings.json file
 
 ## Open
-* add a button/view to manipulate the .settings.json file
 * add favorite files, which can be displayed in other folders
 * file-based preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
 * filename specific reload option ==> change the identificator for filespecific templates to a regex string (i.e. README.md)

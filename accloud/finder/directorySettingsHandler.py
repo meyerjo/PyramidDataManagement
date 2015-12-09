@@ -1,6 +1,10 @@
+import HTMLParser
 import os
+import shutil
 
 import jsonpickle
+from pyramid.renderers import render
+from pyramid.response import Response
 
 from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
 
@@ -20,6 +24,22 @@ class DirectoryCreateLocalSettings(DirectoryRequestHandler):
             return None
         except IOError as e:
             return e.message
+
+
+class DirectoryUpdateLocalSettings(DirectoryRequestHandler):
+    @staticmethod
+    def handle_request(request, relative_path, directory_settings):
+        params_json = dict(request.params)
+        newsettingstring = params_json['newsettings']
+        newsettingstring = HTMLParser.HTMLParser().unescape(newsettingstring)
+        try:
+            newsettingsobj = jsonpickle.decode(newsettingstring)
+            shutil.copyfile(relative_path, relative_path + '_bak')
+            with open(relative_path, 'w') as file:
+                file.write(newsettingsobj)
+        except Exception as e:
+            return Response(render('json', {'error': e.message}))
+        return Response(render('json', {'error': None}))
 
 
 class DirectoryLoadSettings(DirectoryRequestHandler):
@@ -53,4 +73,4 @@ class DirectoryLoadSettings(DirectoryRequestHandler):
             if relative_path == basepath:
                 return dict()
 
-            return self.handle_request(request, previous_folder, directory_settings)
+            return DirectoryLoadSettings.handle_request(request, previous_folder, directory_settings)
