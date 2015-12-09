@@ -36,6 +36,18 @@ class filespecifivviews:
             self.request.registry.settings['root_dir'],
             self.request.matchdict['file'])
 
+    def _detect_csv_delimiter(self, text, possible_delimiter=None):
+        if not possible_delimiter:
+            possible_delimiter = ['\t', ',', ';', ' ']
+        min_delimiter = 0
+        delimit = possible_delimiter[0]
+        for delimiter in possible_delimiter:
+            count = text.count(delimiter)
+            if count > min_delimiter:
+                delimit = delimiter
+                min_delimiter = count
+        return delimit
+
     @view_config(route_name='csv', renderer='template/index.pt')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
@@ -47,6 +59,9 @@ class filespecifivviews:
                 delimit = str('\t')
             elif delimit == 'space':
                 delimit = str(' ')
+            elif delimit == 'auto':
+                auto_detect_delimiter = True
+                delimit = str(',')
         else:
             auto_detect_delimiter = True
             delimit = str(',')
@@ -54,14 +69,7 @@ class filespecifivviews:
         if auto_detect_delimiter:
             with self.open_resource(relative_path) as csv_file:
                 possible_delimiters = ['\t', ',', ';', ' ']
-                min_delimiter = 0
-                delimit = possible_delimiters[0]
-                file_content = csv_file.read()
-                for delimiter in possible_delimiters:
-                    count = file_content.count(delimiter)
-                    if count > min_delimiter:
-                        delimit = delimiter
-                        min_delimiter = count
+                delimit = self._detect_csv_delimiter(csv_file.read(), possible_delimiters)
 
         with self.open_resource(relative_path) as csv_file:
             reader = csv.reader(csv_file, delimiter=delimit)
@@ -69,7 +77,7 @@ class filespecifivviews:
                 <tr tal:repeat="row table"><td tal:repeat="cell row" tal:content="cell"/></tr>
                 </table>''')
             table_html = table(table=reader)
-            return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'])
+        return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'])
 
     @view_config(route_name='markdown', renderer='template/index.pt')
     def markdown(self):

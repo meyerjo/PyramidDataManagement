@@ -1,3 +1,4 @@
+import mimetypes
 import os
 import re
 
@@ -110,6 +111,66 @@ class ItemGrouper:
                 invisible_items.append(item)
         return visible_items_by_extension, visible_items, invisible_items
 
+    def _reorganize_files(self, files,  specific_filter_criteria=None, blacklist=None):
+        if not blacklist:
+            blacklist = []
+        if not specific_filter_criteria:
+            specific_filter_criteria=[]
+
+        items_dict = dict()
+        visible_items = []
+        invisible_items = []
+
+        for file in files:
+            skip = False
+            for rule in blacklist:
+                if rule == '':
+                    continue
+                if re.search(rule, file) is not None:
+                    skip = True
+                    break
+            if skip:
+                continue
+
+            filename, file_ext = os.path.splitext(file)
+            if not file.startswith('.'):
+                visible_items.append(file)
+                handled_file = False
+                # Filter for specific filter-criteria. Enables the user to specify for example regex:README.md$
+                # as a filter criteria and define specific behaviour rules
+                for specific_criteria in specific_filter_criteria:
+                    possible_criteria_types = ['mimetype:', 'regex:']
+                    for criteria_type in possible_criteria_types:
+                        if specific_criteria.startswith(criteria_type):
+                            truncated_criteria = specific_criteria[len(criteria_type):]
+                            element_to_validate = file
+                            if criteria_type == 'mimetype:':
+                                element_to_validate = mimetypes.guess_type(file)[0]
+                                if element_to_validate is None:
+                                    continue
+                            print(truncated_criteria)
+                            print(element_to_validate)
+                            if re.search(truncated_criteria, element_to_validate) is not None:
+                                if specific_criteria not in items_dict:
+                                    items_dict[specific_criteria] = [file]
+                                else:
+                                    items_dict[specific_criteria].append(file)
+                                handled_file = True
+                                break
+                    if handled_file:
+                        break
+                if handled_file:
+                    continue
+
+                # Unable to handle the file by specific criteria, thus we fall back to the fileextension
+                if file_ext in items_dict:
+                    items_dict[file_ext].append(file)
+                else:
+                    items_dict[file_ext] = [file]
+            else:
+                invisible_items.append(file)
+        return items_dict, visible_items, invisible_items
+
     def _apply_filter_to_items(self, items, filter):
         """
         Gets a list of string items and a list of filtercriteria consisting of regular_expressions and filters them into a dictionary
@@ -179,8 +240,10 @@ class ItemGrouper:
     def group_folder(self, files, directory_settings):
         # restructure files and split them according to their fileextension
         if 'blacklist' in directory_settings:
+            # visible_items_by_extension, visible_items, invisible_items = \
+            #     self._reorganize_files(files, ['regex:README\.md$', 'mimetype:^image'], directory_settings['blacklist'])
             visible_items_by_extension, visible_items, invisible_items = \
-                self._reorganize_files_by_extension(files, directory_settings['blacklist'])
+                self._reorganize_files_by_extension(files,  directory_settings['blacklist'])
         else:
             visible_items_by_extension, visible_items, invisible_items = \
                 self._reorganize_files_by_extension(files)
