@@ -62,16 +62,15 @@ def directory(request):
     # apply specific to the items
     visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings)
 
+    custom_directory_template_path = TemplateHandler.loadCustomTemplate(request, directory_settings, 'directory_template_path', 'template/directory.pt')
+
     # send it to the general directory view
-    directory_entry = render('template/directory.pt',
-                             dict(dir=request.matchdict['dir'], visible_items_by_extension=visible_items_by_extension))
+    directory_entry = render(custom_directory_template_path, dict(dir=request.matchdict['dir'],
+                                                                  visible_items_by_extension=visible_items_by_extension))
 
-    # TODO: Enable the user to specify a project specific template file
-    script_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    # print os.path.exists(script_folder + '/template/directory.pt')
 
+    custom_index_path = TemplateHandler.loadCustomTemplate(request, directory_settings, 'custom_index_path', 'template/index.pt')
     localsettingsfileexists = '.settings.json' in invitems
     index_parameter = dict(request=request, html=directory_entry, folders=folders, files=files,
                            localsettingsfile=localsettingsfileexists)
-    html = render('template/index.pt', index_parameter)
-    return Response(html)
+    return Response(render(custom_index_path, index_parameter))

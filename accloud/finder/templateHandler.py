@@ -1,10 +1,40 @@
 import math
+import os
+
 from chameleon import PageTemplate
+
+from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
 
 
 class TemplateHandler:
     def __init__(self):
         pass
+
+    @staticmethod
+    def loadCustomTemplate(request, directory_settings, template_str, fallbackoption):
+        custom_template_path = None
+        base_path = request.registry.settings['root_dir']
+        relative_path = DirectoryRequestHandler.requestfolderpath(request)
+
+        if 'directory_template_path' in directory_settings:
+            dir_path = directory_settings['directory_template_path']
+            if dir_path.startswith('projectlocal:'):
+                dir_path = dir_path[len('projectlocal:'):]
+                custom_template_path = os.path.join(base_path, dir_path)
+            elif dir_path.startswith('folderlocal:'):
+                dir_path = dir_path[len('folderlocal:')]
+                custom_template_path = os.path.join(relative_path, dir_path)
+            elif dir_path.startswith('absolute:'):
+                dir_path = dir_path[len('absolute:'):]
+                custom_template_path = dir_path
+
+        # check if the custom_directory_template is valid
+        if custom_template_path is not None and not os.path.exists(custom_template_path):
+            custom_template_path = None
+        if custom_template_path is None:
+            custom_template_path = fallbackoption
+        return custom_template_path
+
 
     @staticmethod
     def _apply_specific_templates(filenames, extension_specific):
