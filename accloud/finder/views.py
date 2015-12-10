@@ -14,19 +14,6 @@ from accloud.finder.templateHandler import TemplateHandler
 from itemgrouper import ItemGrouper
 
 
-@contextmanager
-def open_resource(filename, mode="r"):
-    try:
-        f = open(filename, mode)
-    except IOError:
-        raise NotFound
-    else:
-        try:
-            yield f
-        finally:
-            f.close()
-
-
 @view_config(route_name='directory')
 def directory(request):
     relative_path = DirectoryRequestHandler.requestfolderpath(request)
