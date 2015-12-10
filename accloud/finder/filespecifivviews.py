@@ -12,6 +12,7 @@ from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
 from accloud.finder.directorySettingsHandler import DirectoryUpdateLocalSettings
 
 
@@ -31,11 +32,6 @@ class filespecifivviews:
             finally:
                 f.close()
 
-    def _requestpath(self):
-        return os.path.join(
-            self.request.registry.settings['root_dir'],
-            self.request.matchdict['file'])
-
     def _detect_csv_delimiter(self, text, possible_delimiter=None):
         if not possible_delimiter:
             possible_delimiter = ['\t', ',', ';', ' ']
@@ -51,7 +47,7 @@ class filespecifivviews:
     @view_config(route_name='csv', renderer='template/index.pt')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt')
     def csv_table(self):
-        relative_path = self._requestpath()
+        relative_path = DirectoryRequestHandler.requestfilepath(self.request)
         auto_detect_delimiter = False
         if 'delimiter' in self.request.matchdict:
             delimit = str(self.request.matchdict['delimiter'])
@@ -81,7 +77,7 @@ class filespecifivviews:
 
     @view_config(route_name='markdown', renderer='template/index.pt')
     def markdown(self):
-        markdown_path = self._requestpath()
+        markdown_path = DirectoryRequestHandler.requestfilepath(self.request)
         with self.open_resource(markdown_path) as markdown_file:
             source = markdown_file.read()
             source = str(source)
@@ -93,16 +89,16 @@ class filespecifivviews:
 
     @view_config(route_name='matlab', renderer='template/index.pt')
     def matlab(self):
-        matlab_path = self._requestpath()
+        matlab_path = DirectoryRequestHandler.requestfilepath(self.request)
 
         with self.open_resource(matlab_path) as matlab_file:
             source = matlab_file.read()
             matlab_html = render('template/matlab.pt', {"request": self.request, "html": source})
-            return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'])
+        return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'])
 
     @view_config(route_name='jsonviewer', renderer='template/index.pt')
     def jsonview(self):
-        jsonpath = self._requestpath()
+        jsonpath = DirectoryRequestHandler.requestfilepath(self.request)
         if not os.path.exists(jsonpath):
             return dict(request=self.request, html='', files=dict(), folders=['.', '..'])
 
@@ -119,6 +115,6 @@ class filespecifivviews:
 
     @view_config(route_name='jsonviewer_plain', renderer='json')
     def json_plain(self):
-        jsonpath = self._requestpath()
+        jsonpath = DirectoryRequestHandler.requestfilepath(self.request)
         with self.open_resource(jsonpath) as file:
             return file.read()
