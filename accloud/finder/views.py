@@ -1,4 +1,3 @@
-import inspect
 import os
 from contextlib import contextmanager
 
@@ -62,14 +61,16 @@ def directory(request):
     # apply specific to the items
     visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings)
 
-    custom_directory_template_path = TemplateHandler.loadCustomTemplate(request, directory_settings, 'directory_template_path', 'template/directory.pt')
+    custom_directory_template_path = TemplateHandler.loadCustomTemplate(request, directory_settings,
+                                                                        'directory_template_path',
+                                                                        'template/directory.pt')
 
     # send it to the general directory view
     directory_entry = render(custom_directory_template_path, dict(dir=request.matchdict['dir'],
                                                                   visible_items_by_extension=visible_items_by_extension))
 
-
-    custom_index_path = TemplateHandler.loadCustomTemplate(request, directory_settings, 'custom_index_path', 'template/index.pt')
+    custom_index_path = TemplateHandler.loadCustomTemplate(request, directory_settings, 'custom_index_path',
+                                                           'template/index.pt')
     localsettingsfileexists = '.settings.json' in invitems
     index_parameter = dict(request=request, html=directory_entry, folders=folders, files=files,
                            localsettingsfile=localsettingsfileexists)
