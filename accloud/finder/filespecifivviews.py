@@ -7,11 +7,13 @@ import HTMLParser
 
 import jsonpickle
 from chameleon import PageTemplate
+from h5py import File
 from pyramid.exceptions import NotFound
 from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from accloud.finder.MatlabParser import MatlabParser
 from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
 from accloud.finder.directorySettingsHandler import DirectoryUpdateLocalSettings
 
@@ -118,3 +120,49 @@ class filespecifivviews:
         jsonpath = DirectoryRequestHandler.requestfilepath(self.request)
         with self.open_resource(jsonpath) as file:
             return file.read()
+
+
+    @view_config(route_name='matlabfileviewer')
+    def matlabreader(self):
+        matlabpath = DirectoryRequestHandler.requestfilepath(self.request)
+        print(MatlabParser(matlabpath).specific_element([u'vmrk', u'y']))
+        table = PageTemplate('''
+                <style>
+                tr.border_bottom td {
+                  border-bottom:1pt solid black;
+                }
+                tr.border_bottom th {
+                  border-bottom:1pt solid black;
+                }
+                </style>
+                <table class="table table-striped table-bordered table-condensed">
+                    <tr>
+                        <th tal:repeat="title matlabheaders" tal:content="title"/>
+                    </tr>
+                    <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
+                        <th tal:content="key"></th>
+                        <td tal:condition="python: not isinstance(values, dict)">
+                            <td tal:content="values[0]"/>
+                            <td tal:content="values[1]"/>
+                        </td>
+                        <td tal:condition="python: isinstance(values, dict)">
+                            <table metal:define-macro="filter_depth" >
+                                <tr tal:repeat="(subkeys, subvalues) values.items()">
+                                    <th tal:content="subkeys"/>
+                                    <td tal:condition="python: not isinstance(subvalues, dict)">
+                                        <td tal:content="subvalues[0]"/>
+                                        <td tal:content="subvalues[1]"/>
+                                    </td>
+                                    <td tal:condition="python: isinstance(subvalues, dict)">
+                                        <table tal:define="values subvalues"
+                                               metal:use-macro="template.macros['filter_depth']"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>''')
+        matlabheaders = ['Keys', 'Values']
+        keydict = MatlabParser(matlabpath).retrieve_structure()
+        table_html = table(matlabheaders=matlabheaders, keydictionaries=keydict)
+        return Response(table_html)

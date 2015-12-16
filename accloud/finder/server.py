@@ -61,6 +61,7 @@ def serve(**settings):
     config.add_route('csv_delimiter', '/{file:' + dir_path + file_basename + '\.csv}/{delimiter}')
     config.add_route('matlab', '/{file:' + dir_path + file_basename + '\.m}')
     config.add_route('jsonviewer', '/{file:' + dir_path + file_basename + '\.json}')
+    config.add_route('matlabfileviewer', '/{file:' + dir_path + file_basename + '\.mat}')
     config.add_route('jsonviewer_plain', '/{file:' + dir_path + file_basename + '\.json}/json')
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
