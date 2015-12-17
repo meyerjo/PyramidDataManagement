@@ -158,13 +158,11 @@ class filespecifivviews:
                         <td tal:condition="python: isinstance(values, dict)">
                             <table metal:define-macro="filter_depth" >
                                 <tr tal:repeat="(subkeys, subvalues) values.items()">
-                                    <th tal:content="subkeys"/>
-                                    <td tal:condition="python: not isinstance(subvalues, dict)">
-                                        <td tal:attributes="id subvalues[3]">
+                                    <th tal:content="subkeys" tal:condition="python: subkeys is not []"/>
+                                        <td tal:condition="python: not isinstance(subvalues, dict)" tal:attributes="id subvalues[3]">
                                             <span tal:content="subvalues[1]"/>
                                             <button tal:condition="python: not subvalues[2]">Expand ${subvalues[3]}</button>
                                         </td>
-                                    </td>
                                     <td tal:condition="python: isinstance(subvalues, dict)">
                                         <table tal:define="values subvalues"
                                                metal:use-macro="template.macros['filter_depth']"/>
