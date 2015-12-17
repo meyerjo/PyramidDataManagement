@@ -114,8 +114,8 @@ class MatlabParser:
                 if key in tmp.keys():
                     tmp = tmp[key]
             if isinstance(tmp, h5py.Dataset):
-                return tmp.shape, self._parse_dataset(matfile, tmp, float('inf'))
+                return self._parse_dataset(matfile, tmp, float('inf')) + ('&'.join(keypath),)
             elif isinstance(tmp, h5py.Group):
-                return self._traverse_h5pygroups(matfile, tmp, [], float('inf'))
+                return self._traverse_h5pygroups(matfile, tmp, [], float('inf')) + ('&'.join(keypath),)
             else:
                 return None, None

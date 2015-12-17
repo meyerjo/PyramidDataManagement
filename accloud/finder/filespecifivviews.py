@@ -22,6 +22,34 @@ class filespecifivviews:
     def __init__(self, request):
         self.request = request
 
+
+        self._keyDicthtml =   PageTemplate('''
+            <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
+                <th tal:content="key"></th>
+                <span tal:condition="python: not isinstance(values, dict)">
+                    <td tal:attributes="id values[3]">
+                        <span tal:content="values[1]"/>
+                        <button class="btn btn-success" tal:condition="python: not values[2]">Expand</button>
+                    </td>
+                </span>
+                <td tal:condition="python: isinstance(values, dict)">
+                    <table metal:define-macro="filter_depth" >
+                        <tr tal:repeat="(subkeys, subvalues) values.items()">
+                            <th tal:content="subkeys" tal:condition="python: subkeys is not []"/>
+                            <td tal:condition="python: not isinstance(subvalues, dict)" tal:attributes="id subvalues[3]">
+                                <span tal:content="subvalues[1]"/>
+                                <button class="btn btn-success" tal:condition="python: not subvalues[2]">Expand</button>
+                            </td>
+                            <td tal:condition="python: isinstance(subvalues, dict)">
+                                <table tal:define="values subvalues"
+                                       metal:use-macro="template.macros['filter_depth']"/>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        ''')
+
     @contextmanager
     def open_resource(self, filename, mode="r"):
         try:
@@ -122,7 +150,7 @@ class filespecifivviews:
             return file.read()
 
 
-    @view_config(route_name='matlabfileviewer')
+    @view_config(route_name='matlabfileviewer', renderer='template/index.pt')
     def matlabreader(self):
         matlabpath = DirectoryRequestHandler.requestfilepath(self.request)
         table = PageTemplate('''
@@ -131,7 +159,13 @@ class filespecifivviews:
                     $(document).ready(function() {
                         $("button").on('click', function() {
                             parent_id = $(this).parent().attr("id");
-                            alert(parent_id.split('&'));
+                            parent = $(this).closest('tr');
+                            $.ajax({
+                                url: window.location.href + '/' + parent_id,
+                                method: 'GET'
+                            }).done(function(data) {
+                                $(parent).replaceWith(data);
+                            });
                         });
                     });
                 </script>
@@ -147,32 +181,22 @@ class filespecifivviews:
                     <tr>
                         <th tal:repeat="title matlabheaders" tal:content="title"/>
                     </tr>
-                    <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
-                        <th tal:content="key"></th>
-                        <span tal:condition="python: not isinstance(values, dict)">
-                            <td tal:attributes="id values[3]">
-                                <span tal:content="values[1]"/>
-                                <button tal:condition="python: not values[2]">Expand ${values[3]}</button>
-                            </td>
-                        </span>
-                        <td tal:condition="python: isinstance(values, dict)">
-                            <table metal:define-macro="filter_depth" >
-                                <tr tal:repeat="(subkeys, subvalues) values.items()">
-                                    <th tal:content="subkeys" tal:condition="python: subkeys is not []"/>
-                                        <td tal:condition="python: not isinstance(subvalues, dict)" tal:attributes="id subvalues[3]">
-                                            <span tal:content="subvalues[1]"/>
-                                            <button tal:condition="python: not subvalues[2]">Expand ${subvalues[3]}</button>
-                                        </td>
-                                    <td tal:condition="python: isinstance(subvalues, dict)">
-                                        <table tal:define="values subvalues"
-                                               metal:use-macro="template.macros['filter_depth']"/>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                    ${structure: rows}
                 </table>''')
+
         matlabheaders = ['Keys', 'Values']
         keydict = MatlabParser(matlabpath).retrieve_structure()
-        table_html = table(matlabheaders=matlabheaders, keydictionaries=keydict)
-        return Response(table_html)
+        keys_html = self._keyDicthtml(keydictionaries=keydict)
+        table_html = table(matlabheaders=matlabheaders, rows=keys_html)
+        return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'])
+
+
+    @view_config(route_name='matlabfileviewer_subpath')
+    def matlabreader_specificsubkey(self):
+        matlabpath = DirectoryRequestHandler.requestfilepath(self.request)
+        subkeypath = self.request.matchdict['subkeypath']
+        split_keys = subkeypath.split('&')
+        keydict = MatlabParser(matlabpath).specific_element(split_keys)
+        keydict = {split_keys[-1]: keydict}
+        keys_html = self._keyDicthtml(keydictionaries=keydict)
+        return Response(keys_html)
