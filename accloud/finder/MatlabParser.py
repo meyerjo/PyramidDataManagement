@@ -119,3 +119,13 @@ class MatlabParser:
                 return self._traverse_h5pygroups(matfile, tmp, [], float('inf')) + ('&'.join(keypath),)
             else:
                 return None, None
+
+    def compare_multiple_files(self, filenames):
+        keys = None
+        for filename in filenames:
+            with h5py.File(filename) as matfile:
+                if keys is None:
+                    keys = matfile.keys()
+                else:
+                    keys = list(set(keys).intersection(matfile.keys()))
+        return keys
