@@ -56,32 +56,43 @@ class MatlabParser:
         dataset = np.transpose(data)
         return dataset
 
-    def _traverse_h5pygroups(self, fileref, group):
-        if len(group) > self._groupmaximum and isinstance(group, h5py.Group):
-            return str(group)
+    def _traverse_h5pygroups(self, fileref, group, keypath, groupmaximum=None, datasetmaximum=None):
+        if groupmaximum is None:
+            groupmaximum = self._groupmaximum
+        if datasetmaximum is None:
+            datasetmaximum = self._datasetmaximum
+
+        if len(group) > groupmaximum and isinstance(group, h5py.Group):
+            id = '&'.join(keypath)
+            return (len(group),1), str(group), False, id
+
         if not isinstance(group, h5py.Group):
-            return self._parse_dataset(fileref, group)
+            id = '&'.join(keypath)
+            return self._parse_dataset(fileref, group, datasetmaximum) + (id,)
+
         output = dict(zip(group.keys(), [None] * len(group.keys())))
         for key in group.keys():
-            if len(group[key]) <= self._groupmaximum:
-                output[key] = self._traverse_h5pygroups(fileref, group[key])
+            if len(group[key]) <= groupmaximum:
+                output[key] = self._traverse_h5pygroups(fileref, group[key], keypath + [key], groupmaximum, datasetmaximum)
             else:
                 output[key] = str(group[key])
         return output
 
-    def _parse_dataset(self, fileref, dataset):
+    def _parse_dataset(self, fileref, dataset, datasetmaximum=None):
+        if datasetmaximum is None:
+            datasetmaximum = self._datasetmaximum
         shape = dataset.shape
         prod = 1
         for i in range(0, len(shape)):
             prod *= shape[i]
-        if prod > self._datasetmaximum:
-            return shape, str(dataset)
+        if prod > datasetmaximum:
+            return shape, str(dataset), False
         if str(dataset.dtype) in self._fileParserFcn:
             dataset = self._fileParserFcn[str(dataset.dtype)](fileref, dataset)
         else:
             dataset = 'Unparsed: {0}\t{1}\tDatatype unknown:{2}'.format(str(dataset.dtype), str(dataset),
                                                                         str(dataset.dtype))
-        return shape, dataset
+        return shape, dataset, True
 
     def retrieve_structure(self):
         with h5py.File(self._filename) as matfile:
@@ -91,7 +102,9 @@ class MatlabParser:
 
             for key in keydict.keys():
                 currentkey = matfile[key]
-                keydict[key] = self._traverse_h5pygroups(matfile, currentkey)
+                keypath = [key]
+                keydict[key] = self._traverse_h5pygroups(matfile, currentkey, keypath)
+
         return keydict
 
     def specific_element(self, keypath):
@@ -101,9 +114,8 @@ class MatlabParser:
                 if key in tmp.keys():
                     tmp = tmp[key]
             if isinstance(tmp, h5py.Dataset):
-                self._datasetmaximum = float('inf')
-                return tmp.shape, self._parse_dataset(matfile, tmp)
+                return tmp.shape, self._parse_dataset(matfile, tmp, float('inf'))
             elif isinstance(tmp, h5py.Group):
-                print('Found group' + str(tmp))
+                return self._traverse_h5pygroups(matfile, tmp, [], float('inf'))
             else:
-                print('Nothing')
+                return None, None

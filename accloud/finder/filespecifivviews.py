@@ -125,8 +125,16 @@ class filespecifivviews:
     @view_config(route_name='matlabfileviewer')
     def matlabreader(self):
         matlabpath = DirectoryRequestHandler.requestfilepath(self.request)
-        print(MatlabParser(matlabpath).specific_element([u'vmrk', u'y']))
         table = PageTemplate('''
+                <script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+                <script>
+                    $(document).ready(function() {
+                        $("button").on('click', function() {
+                            parent_id = $(this).parent().attr("id");
+                            alert(parent_id.split('&'));
+                        });
+                    });
+                </script>
                 <style>
                 tr.border_bottom td {
                   border-bottom:1pt solid black;
@@ -142,16 +150,20 @@ class filespecifivviews:
                     <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
                         <th tal:content="key"></th>
                         <td tal:condition="python: not isinstance(values, dict)">
-                            <td tal:content="values[0]"/>
-                            <td tal:content="values[1]"/>
+                            <td tal:attributes="id values[3]">
+                                <span tal:content="values[1]"/>
+                                <button tal:condition="python: not values[2]">Expand ${values[3]}</button>
+                            </td>
                         </td>
                         <td tal:condition="python: isinstance(values, dict)">
                             <table metal:define-macro="filter_depth" >
                                 <tr tal:repeat="(subkeys, subvalues) values.items()">
                                     <th tal:content="subkeys"/>
                                     <td tal:condition="python: not isinstance(subvalues, dict)">
-                                        <td tal:content="subvalues[0]"/>
-                                        <td tal:content="subvalues[1]"/>
+                                        <td tal:attributes="id subvalues[3]">
+                                            <span tal:content="subvalues[1]"/>
+                                            <button tal:condition="python: not subvalues[2]">Expand ${subvalues[3]}</button>
+                                        </td>
                                     </td>
                                     <td tal:condition="python: isinstance(subvalues, dict)">
                                         <table tal:define="values subvalues"
