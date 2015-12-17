@@ -14,7 +14,7 @@ requires = [
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'waitress',
-    'python-Levenshtein', 'jsonpickle'
+    'python-Levenshtein', 'jsonpickle', 'pdfkit', 'markdown', 'h5py'
     ]
 
 setup(name='accloud',

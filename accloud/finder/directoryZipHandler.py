@@ -20,7 +20,6 @@ class DirectoryZipHandler(DirectoryRequestHandler):
                 newkeypath = keypath + key
                 if depth < 1:
                     newkeypath = ''
-
                 coll = coll + DirectoryZipHandler._file_tuples(depth + 1, newkeypath, values)
             return coll
         elif isinstance(item, list):
@@ -51,7 +50,7 @@ class DirectoryZipHandler(DirectoryRequestHandler):
                 depth = 1
 
         # TODO: Sometimes zip file creation doesnt halt. It seems to be dependent on the fact whether another request.zip file already exists
-        nosubfolderallowed = 'nosubfolders' in dict(request.params)
+        nosubfolderallowed = 'key_not_as_folder_separator' in dict(request.params)
         tuples = DirectoryZipHandler._file_tuples(depth, '', items_dict)
         tempdirpath = tempfile.mkdtemp()
         zippath = tempdirpath + '/request.zip'
