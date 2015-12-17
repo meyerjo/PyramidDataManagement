@@ -149,12 +149,12 @@ class filespecifivviews:
                     </tr>
                     <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
                         <th tal:content="key"></th>
-                        <td tal:condition="python: not isinstance(values, dict)">
+                        <span tal:condition="python: not isinstance(values, dict)">
                             <td tal:attributes="id values[3]">
                                 <span tal:content="values[1]"/>
                                 <button tal:condition="python: not values[2]">Expand ${values[3]}</button>
                             </td>
-                        </td>
+                        </span>
                         <td tal:condition="python: isinstance(values, dict)">
                             <table metal:define-macro="filter_depth" >
                                 <tr tal:repeat="(subkeys, subvalues) values.items()">
