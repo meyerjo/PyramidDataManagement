@@ -18,6 +18,45 @@
             event.preventDefault();
             $(this).ekkoLightbox();
         });
+
+
+        $(document).ready(function() {
+            $('body').on('change', '.subkey_toggle_checkbox', function() {
+              $("#" + $(this).attr("value")).slideToggle("slow");
+            });
+
+            $("button").on('click', function() {
+                // TODO: check how to prevent the ids from reappearing
+                if ($(this).attr("data-content") != '') {
+                    return;
+                }
+
+                var IDs = [];
+                $(this).parent().find(".elements").each(function()
+                {
+                    IDs.push(this.id);
+                });
+
+                var html = $(document.createElement('div'));
+                $(IDs).each(function(i, val) {
+
+                    var checkbox_element = $(document.createElement('input')).
+                    attr("type", "checkbox").
+                    attr("value", val).
+                    attr("checked", "true").
+                    attr("class", "subkey_toggle_checkbox").
+                    attr("id", "checkbox_id_" + i);
+                    var label_element = $(document.createElement('label')).attr("for", "checkbox_id_" + i).text(val);
+                    html.append(checkbox_element);
+                    html.append(label_element);
+                    html.append($(document.createElement('br')));
+                });
+                $(this).attr("title", "Select specific subkeys");
+                $(this).attr("data-content", $(html).html());
+                $('[data-toggle="popover"]').popover()
+            });
+        });
+
     </script>
 </head>
 <body>
