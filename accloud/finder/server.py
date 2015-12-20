@@ -46,12 +46,14 @@ def serve(**settings):
     config.include('pyramid_chameleon')
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
+        config.registry.settings['reload_templates'] = True
 
     config.registry.settings['directory_settings'] = dict()
-    config.registry.settings['reload_templates'] = True
 
     # load directory settings
+    print('Load settings')
     load_directory_settings(config)
+    print('Adding routes')
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
@@ -74,6 +76,7 @@ def serve(**settings):
     config.add_route('static', '/_static/*subpath')
     config.add_route('files', '/*subpath')
 
+    print('Add views')
     here = lambda p: os.path.join(os.path.abspath(os.path.dirname(__file__)), p)
     static = static_view(here('static'), use_subpath=True)
     files = static_view(
