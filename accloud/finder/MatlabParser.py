@@ -1,7 +1,6 @@
 import h5py
-import jsonpickle
-import math
 import numpy as np
+import re
 
 
 class MatlabParser:
@@ -14,7 +13,6 @@ class MatlabParser:
                                'uint16': self._parser_uint16,
                                'uint8': self._parser_uint8,
                                'object': self._parser_object}
-
 
     @staticmethod
     def _parser_float64(fileref, dataset):
@@ -57,6 +55,15 @@ class MatlabParser:
         return dataset
 
     def _traverse_h5pygroups(self, fileref, group, keypath, groupmaximum=None, datasetmaximum=None):
+        """
+        Traverses the "tree-structure" of a matlab file
+        :param fileref:
+        :param group:
+        :param keypath:
+        :param groupmaximum:
+        :param datasetmaximum:
+        :return:
+        """
         if groupmaximum is None:
             groupmaximum = self._groupmaximum
         if datasetmaximum is None:
@@ -64,7 +71,7 @@ class MatlabParser:
 
         if len(group) > groupmaximum and isinstance(group, h5py.Group):
             id = '&'.join(keypath)
-            return (len(group),1), str(group), False, id
+            return (len(group), 1), str(group), False, id
 
         if not isinstance(group, h5py.Group):
             id = '&'.join(keypath)
@@ -73,18 +80,24 @@ class MatlabParser:
         output = dict(zip(group.keys(), [None] * len(group.keys())))
         for key in group.keys():
             if len(group[key]) <= groupmaximum:
-                output[key] = self._traverse_h5pygroups(fileref, group[key], keypath + [key], groupmaximum, datasetmaximum)
+                output[key] = self._traverse_h5pygroups(fileref, group[key], keypath + [key], groupmaximum,
+                                                        datasetmaximum)
             else:
                 output[key] = str(group[key])
         return output
 
     def _parse_dataset(self, fileref, dataset, datasetmaximum=None):
+        """
+        Outputs information about the dataset in a matlab file
+        :param fileref:
+        :param dataset:
+        :param datasetmaximum:
+        :return:
+        """
         if datasetmaximum is None:
             datasetmaximum = self._datasetmaximum
         shape = dataset.shape
-        prod = 1
-        for i in range(0, len(shape)):
-            prod *= shape[i]
+        prod = np.prod(np.array(shape))
         if prod > datasetmaximum:
             return shape, str(dataset), False
         if str(dataset.dtype) in self._fileParserFcn:
@@ -95,6 +108,10 @@ class MatlabParser:
         return shape, dataset, True
 
     def retrieve_structure(self):
+        """
+        Outputs the file structure from the matlab file
+        :return:
+        """
         with h5py.File(self._filename) as matfile:
             matlabkeys = matfile.keys()
             emptyvalues = [None] * len(matlabkeys)
@@ -108,6 +125,11 @@ class MatlabParser:
         return keydict
 
     def specific_element(self, keypath):
+        """
+        Queries a specific key path in order to reload content
+        :param keypath:
+        :return:
+        """
         with h5py.File(self._filename) as matfile:
             tmp = matfile
             for key in keypath:
@@ -121,8 +143,16 @@ class MatlabParser:
                 return None, None
 
     def compare_multiple_files(self, filenames):
+        """
+        Compares multiple mat files and outputs the common fieldnames, contained
+        in all files
+        :param filenames:
+        :return:
+        """
         keys = None
         for filename in filenames:
+            if re.search('\.mat$', filename) is None:
+                continue
             with h5py.File(filename) as matfile:
                 if keys is None:
                     keys = matfile.keys()

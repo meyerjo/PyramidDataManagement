@@ -56,14 +56,20 @@ def serve(**settings):
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
 
-    config.add_route('markdown', '/{file:' + dir_path + file_basename + '\.md}')
-    config.add_route('csv', '/{file:' + dir_path + file_basename + '\.csv}')
-    config.add_route('csv_delimiter', '/{file:' + dir_path + file_basename + '\.csv}/{delimiter}')
-    config.add_route('matlab', '/{file:' + dir_path + file_basename + '\.m}')
-    config.add_route('jsonviewer', '/{file:' + dir_path + file_basename + '\.json}')
-    config.add_route('matlabfileviewer', '/{file:' + dir_path + file_basename + '\.mat}')
-    config.add_route('matlabfileviewer_subpath', '/{file:' + dir_path + file_basename + '\.mat}/{subkeypath}')
-    config.add_route('jsonviewer_plain', '/{file:' + dir_path + file_basename + '\.json}/json')
+    fileroutes = [dict(route_name='markdown', file_extension='\.md', options=None),
+                  dict(route_name='csv', file_extension='\.csv', options=None),
+                  dict(route_name='csv_delimiter', file_extension='\.csv', options='/{delimiter}'),
+                  dict(route_name='matlab', file_extension='\.m', options=None),
+                  dict(route_name='matlabfileviewer', file_extension='\.mat', options=None),
+                  dict(route_name='matlabfileviewer_subpath', file_extension='\.mat', options='/{subkeypath}'),
+                  dict(route_name='jsonviewer', file_extension='\.json', options=None),
+                  dict(route_name='jsonviewer_plain', file_extension='\.json', options='/json')]
+    for fileroute in fileroutes:
+        options = '' if fileroute['options'] is None else fileroute['options']
+        options = options if options.startswith('/') or options == '' else '/' + options
+        filepath = '/{file:' + dir_path + file_basename + fileroute['file_extension'] + '}'
+        config.add_route(fileroute['route_name'], filepath + options)
+
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
     config.add_route('files', '/*subpath')
