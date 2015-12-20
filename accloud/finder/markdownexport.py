@@ -156,6 +156,7 @@ class PresentationMarkdownExport(MarkdownExport):
 
     def _markdown_table(self, items, expected_items):
         assert (isinstance(items, list))
+        expected_items = max(2, expected_items)
         output = '|'
         for item in items:
             item = str(item)
