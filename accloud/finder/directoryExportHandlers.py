@@ -31,6 +31,7 @@ class PresentationExportHandler(DirectoryRequestHandler):
 
 
 class ReportExportHandler(DirectoryRequestHandler):
+    @staticmethod
     def handle_request(request, relative_path, directory_settings):
         """
         Handles the PDF requests
