@@ -1,30 +1,23 @@
 import os
-from pyramid.httpexceptions import HTTPFound
+
 from pyramid.renderers import render
 from pyramid.response import Response
-from pyramid.security import Allow, Everyone
-from pyramid.security import (
-    remember,
-    forget,
-)
 from pyramid.view import (
     view_config,
-    forbidden_view_config,
 )
+
 from accloud.finder.directoryExportHandlers import PresentationExportHandler, ReportExportHandler
 from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings, DirectoryCreateLocalSettings
 from accloud.finder.directoryZipHandler import DirectoryZipHandler
 from accloud.finder.templateHandler import TemplateHandler
 from itemgrouper import ItemGrouper
-from .security import USERS
 
 
 class DirectoryRequest:
     def __init__(self, request):
         self.request = request
         self.logged_in = request.authenticated_userid
-
 
     def _custom_request_handler(self, relative_path, directory_settings):
         param_dict = dict(self.request.params)
@@ -41,7 +34,7 @@ class DirectoryRequest:
         else:
             return None
 
-    @view_config(route_name='directory', permission='edit')
+    @view_config(route_name='directory', permission='authenticatedusers')
     def directory(self):
         relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
         listing = os.listdir(relative_path)
@@ -83,4 +76,3 @@ class DirectoryRequest:
                                localsettingsfile=localsettingsfileexists,
                                logged_in=self.request.authenticated_userid)
         return Response(render(custom_index_path, index_parameter))
-

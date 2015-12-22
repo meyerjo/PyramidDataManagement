@@ -11,11 +11,21 @@ from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
 from .security import groupfinder
 
 
+def root_factory(settings):
+    auth = settings['authentication']
+    if auth == 'None':
+        return '.resources.NoAuthenticationRoot'
+    elif auth == 'standard':
+        return '.resources.Root'
+    else:
+        raise BaseException('Error: Unknown authentication setting [{0}]'.format(auth))
+
+
 def serve(**settings):
     authn_policy = AuthTktAuthenticationPolicy(
         'sosecret', callback=groupfinder, hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
-    config = Configurator(settings=settings, root_factory='.resources.Root')
+    config = Configurator(settings=settings, root_factory=root_factory(settings))
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
 
@@ -53,7 +63,7 @@ def serve(**settings):
 
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
-    config.add_route('files', '/*subpath', permission='view')
+    config.add_route('files', '/*subpath', permission='authenticatedusers')
 
     print('Add views')
     here = lambda p: os.path.join(os.path.abspath(os.path.dirname(__file__)), p)
@@ -63,7 +73,7 @@ def serve(**settings):
         use_subpath=True)
 
     config.add_view(static, route_name='static')
-    config.add_view(files, route_name='files')
+    config.add_view(files, route_name='files', permission='authenticatedusers')
     config.scan()
     app = config.make_wsgi_app()
     print('Creating server')

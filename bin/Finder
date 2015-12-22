@@ -20,6 +20,13 @@ parser.add_argument(
 parser.add_argument(
     '--debug',
     action='store_true')
+parser.add_argument(
+    '--authentication',
+    nargs='?',
+    default='None',
+    type=str,
+    help='Specify authentication method'
+)
 args = parser.parse_args()
 
 if not args.debug:
@@ -28,7 +35,8 @@ if not args.debug:
 settings = {
     'root_dir': args.dir,
     'port': args.port,
-    'trace': args.debug
+    'trace': args.debug,
+    'authentication': args.authentication
 }
 if args.debug:
     import pdb

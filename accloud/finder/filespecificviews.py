@@ -46,8 +46,8 @@ class FileSpecificViews:
             </tr>
         ''')
 
-    @view_config(route_name='csv', renderer='template/index.pt', permission='view')
-    @view_config(route_name='csv_delimiter', renderer='template/index.pt', permission='view')
+    @view_config(route_name='csv', renderer='template/index.pt', permission='authenticatedusers')
+    @view_config(route_name='csv_delimiter', renderer='template/index.pt', permission='authenticatedusers')
     def csv_table(self):
         relative_path = DirectoryRequestHandler.requestfilepath(self.request)
         delimit = CSVHandler.getdelimiter(relative_path, self.request.matchdict)
@@ -61,7 +61,7 @@ class FileSpecificViews:
         return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'],
                     logged_in=self.request.authenticated_userid)
 
-    @view_config(route_name='markdown', renderer='template/index.pt', permission='view')
+    @view_config(route_name='markdown', renderer='template/index.pt', permission='authenticatedusers')
     def markdown(self):
         markdown_path = DirectoryRequestHandler.requestfilepath(self.request)
         with open_resource(markdown_path) as markdown_file:
@@ -73,7 +73,7 @@ class FileSpecificViews:
             html = render('template/markdown.pt', {"request": self.request, "html": html})
         return dict(request=self.request, html=html, files=dict(), folders=['.', '..'])
 
-    @view_config(route_name='matlab', renderer='template/index.pt', permission='view')
+    @view_config(route_name='matlab', renderer='template/index.pt', permission='authenticatedusers')
     def matlab(self):
         matlab_path = DirectoryRequestHandler.requestfilepath(self.request)
 
@@ -82,8 +82,8 @@ class FileSpecificViews:
             matlab_html = render('template/matlab.pt', {"request": self.request, "html": source})
         return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'])
 
-    @view_config(route_name='jsonviewer', renderer='template/index.pt', permission='view')
-    @view_config(route_name='jsonviewer_plain', renderer='json', permission='view')
+    @view_config(route_name='jsonviewer', renderer='template/index.pt', permission='authenticatedusers')
+    @view_config(route_name='jsonviewer_plain', renderer='json', permission='authenticatedusers')
     def jsonview(self):
         """
         Returns the json file either in a formatted way or as plain text
@@ -107,8 +107,8 @@ class FileSpecificViews:
                                                              filename=self.request.matchdict['file']))
             return dict(request=self.request, html=json_html, files=dict(), folders=['.', '..'])
 
-    @view_config(route_name='matlabfileviewer', renderer='template/index.pt', permission='view')
-    @view_config(route_name='matlabfileviewer_subpath', permission='view')
+    @view_config(route_name='matlabfileviewer', renderer='template/index.pt', permission='authenticatedusers')
+    @view_config(route_name='matlabfileviewer_subpath', permission='authenticatedusers')
     def matlabreader(self):
         """
         Read matlab files
