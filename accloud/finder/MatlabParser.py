@@ -51,6 +51,7 @@ class MatlabParser:
             print('\t' + str(dataset.dtype))
             print('\t' + str(type(dataset)))
             print('\t' + str(e))
+            return 'Parsing failed'
         dataset = np.transpose(data)
         return dataset
 

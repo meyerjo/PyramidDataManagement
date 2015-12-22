@@ -1,22 +1,7 @@
-from contextlib import contextmanager
-
-from werkzeug.exceptions import NotFound
+from accloud.finder.fileHandler import open_resource
 
 
 class CSVHandler:
-
-    @contextmanager
-    def open_resource(self, filename, mode="r"):
-        try:
-            f = open(filename, mode)
-        except IOError:
-            raise NotFound
-        else:
-            try:
-                yield f
-            finally:
-                f.close()
-
     @staticmethod
     def _detect_csv_delimiter(text, possible_delimiter=None):
         if not possible_delimiter:
@@ -47,7 +32,7 @@ class CSVHandler:
             delimit = str(',')
 
         if auto_detect_delimiter:
-            with path.open_resource(path) as csv_file:
+            with open_resource(path) as csv_file:
                 possible_delimiters = ['\t', ',', ';', ' ']
                 delimit = path._detect_csv_delimiter(csv_file.read(), possible_delimiters)
         return delimit

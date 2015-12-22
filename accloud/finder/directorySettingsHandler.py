@@ -74,3 +74,39 @@ class DirectoryLoadSettings(DirectoryRequestHandler):
                 return dict()
 
             return DirectoryLoadSettings.handle_request(request, previous_folder, directory_settings)
+
+    @staticmethod
+    def load_server_settings(root_dir, config):
+        assert(hasattr(config, 'registry'))
+        assert(hasattr(config.registry, 'settings'))
+        for root, dirs, files in os.walk(root_dir):
+            root = os.path.abspath(root)
+            if '.settings.json' in files:
+                lastfolder = os.path.abspath(root + '/..')
+                last_settings = dict()
+                if lastfolder in config.registry.settings['directory_settings']:
+                    last_settings = config.registry.settings['directory_settings'][lastfolder]
+
+                config.registry.settings['directory_settings'][root] = last_settings
+
+                filename = root + '/.settings.json'
+                with open(os.path.join(filename), "r") as myfile:
+                    data = myfile.read()
+                    settings_struct = jsonpickle.decode(data)
+                    if not isinstance(settings_struct, dict):
+                        settings_struct = jsonpickle.decode(settings_struct)
+
+                try:
+                    settings_struct.update(config.registry.settings['directory_settings'][root])
+                    config.registry.settings['directory_settings'][root] = settings_struct
+                    config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings[
+                        'reload_templates']
+                    config.registry.settings['directory_settings'][root]['path'] = filename
+                except Exception as e:
+                    print(e.message)
+
+            else:
+                path = os.path.abspath(root + '/..')
+                if path in config.registry.settings['directory_settings']:
+                    config.registry.settings['directory_settings'][root] = \
+                        config.registry.settings['directory_settings'][path]

@@ -2,47 +2,23 @@
 import os
 from wsgiref.simple_server import make_server
 
-import jsonpickle
+from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.static import static_view
 
-
-def load_directory_settings(config):
-    for root, dirs, files in os.walk(config.registry.settings['root_dir']):
-        root = os.path.abspath(root)
-        if '.settings.json' in files:
-            lastfolder = os.path.abspath(root + '/..')
-            last_settings = dict()
-            if lastfolder in config.registry.settings['directory_settings']:
-                last_settings = config.registry.settings['directory_settings'][lastfolder]
-
-            config.registry.settings['directory_settings'][root] = last_settings
-
-            filename = root + '/.settings.json'
-            with open(os.path.join(filename), "r") as myfile:
-                data = myfile.read()
-                settings_struct = jsonpickle.decode(data)
-                if not isinstance(settings_struct, dict):
-                    settings_struct = jsonpickle.decode(settings_struct)
-
-            try:
-                settings_struct.update(config.registry.settings['directory_settings'][root])
-                config.registry.settings['directory_settings'][root] = settings_struct
-                config.registry.settings['directory_settings'][root]['reload'] = config.registry.settings[
-                    'reload_templates']
-                config.registry.settings['directory_settings'][root]['path'] = filename
-            except Exception as e:
-                print(e.message)
-
-        else:
-            path = os.path.abspath(root + '/..')
-            if path in config.registry.settings['directory_settings']:
-                config.registry.settings['directory_settings'][root] = \
-                    config.registry.settings['directory_settings'][path]
+from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
+from .security import groupfinder
 
 
 def serve(**settings):
-    config = Configurator(settings=settings)
+    authn_policy = AuthTktAuthenticationPolicy(
+        'sosecret', callback=groupfinder, hashalg='sha512')
+    authz_policy = ACLAuthorizationPolicy()
+    config = Configurator(settings=settings, root_factory='.resources.Root')
+    config.set_authentication_policy(authn_policy)
+    config.set_authorization_policy(authz_policy)
+
     config.include('pyramid_chameleon')
     if settings['trace']:
         config.include('pyramid_debugtoolbar')
@@ -52,11 +28,14 @@ def serve(**settings):
 
     # load directory settings
     print('Load settings')
-    load_directory_settings(config)
+    DirectoryLoadSettings().load_server_settings(config.registry.settings['root_dir'], config)
     print('Adding routes')
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
+
+    config.add_route('login', '/login')
+    config.add_route('logout', '/logout')
 
     fileroutes = [dict(route_name='markdown', file_extension='\.md', options=None),
                   dict(route_name='csv', file_extension='\.csv', options=None),
@@ -74,7 +53,7 @@ def serve(**settings):
 
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
-    config.add_route('files', '/*subpath')
+    config.add_route('files', '/*subpath', permission='view')
 
     print('Add views')
     here = lambda p: os.path.join(os.path.abspath(os.path.dirname(__file__)), p)
