@@ -1,5 +1,4 @@
 import os
-
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -15,18 +14,18 @@ requires = [
     'pyramid_debugtoolbar',
     'waitress',
     'python-Levenshtein', 'jsonpickle', 'pdfkit', 'markdown', 'h5py'
-    ]
+]
 
 setup(name='accloud',
       version='0.2',
       description='Tools to conduct and explore ACcloud experiments',
       long_description=README,
       classifiers=[
-        "Programming Language :: Python",
-        "Framework :: Pyramid",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-        ],
+          "Programming Language :: Python",
+          "Framework :: Pyramid",
+          "Topic :: Internet :: WWW/HTTP",
+          "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+      ],
       author='Martin Goth',
       author_email='gothm@tf.uni-freiburg.de',
       url='https://github.com/AC-cloud/tools',
@@ -36,7 +35,16 @@ setup(name='accloud',
       zip_safe=False,
       install_requires=requires,
       entry_points={
-        'console_scripts': ['boxplot-validations=accloud.plots.boxplot_validations:main']
+          'console_scripts': ['boxplot-validations=accloud.plots.boxplot_validations:main']
       },
       scripts=['bin/Finder', 'bin/ACcloud']
+      )
+
+
+setup(name='finder',
+      install_requires=requires,
+      entry_points="""\
+      [paste.app_factory]
+      main = accloud.finder:main
+      """,
 )
