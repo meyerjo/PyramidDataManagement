@@ -7,8 +7,8 @@ from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.static import static_view
 
+from accloud.finder import UserManager
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
-from .security import groupfinder
 
 
 def root_factory(settings):
@@ -23,7 +23,7 @@ def root_factory(settings):
 
 def serve(**settings):
     authn_policy = AuthTktAuthenticationPolicy(
-        'sosecret', callback=groupfinder, hashalg='sha512')
+        'sosecret', callback=UserManager.groupfinder, hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
     config = Configurator(settings=settings, root_factory=root_factory(settings))
     config.set_authentication_policy(authn_policy)
@@ -46,6 +46,7 @@ def serve(**settings):
 
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
+    config.add_route('usermanagement', '/um')
 
     fileroutes = [dict(route_name='markdown', file_extension='\.md', options=None),
                   dict(route_name='csv', file_extension='\.csv', options=None),

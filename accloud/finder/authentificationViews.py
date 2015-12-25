@@ -2,7 +2,7 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.security import forget, remember
 from pyramid.view import view_config, forbidden_view_config
 
-from accloud.finder.security import USERS
+from accloud.finder.security import UserManager
 
 
 class AuthentificationViews:
@@ -14,7 +14,6 @@ class AuthentificationViews:
     @view_config(route_name='login', renderer='template/login.pt')
     @forbidden_view_config(renderer='template/login.pt')
     def login(self):
-        print(self.request.matched_route.name)
         login_url = self.request.resource_url(self.request.context, 'login')
         referrer = self.request.url
         if referrer == login_url:
@@ -26,7 +25,8 @@ class AuthentificationViews:
         if 'form.submitted' in self.request.params:
             login = self.request.params['login']
             password = self.request.params['password']
-            if USERS.get(login) == password:
+            usermanager = self.request.registry.settings['usermanager']
+            if usermanager.validate_password(login, password):
                 headers = remember(self.request, login)
                 return HTTPFound(location=came_from,
                                  headers=headers)
@@ -45,3 +45,8 @@ class AuthentificationViews:
         headers = forget(self.request)
         return HTTPFound(location=self.request.resource_url(self.request.context),
                          headers=headers)
+
+    @view_config(route_name='usermanagement', renderer='template/usermanagement.pt', permission='xedit')
+    def usermanagement(self):
+        users = self.request.registry.settings['usermanager'].allUsers()
+        return dict(folders=[], files=dict(), logged_in=self.logged_in, users=users)

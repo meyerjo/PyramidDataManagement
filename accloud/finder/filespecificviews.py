@@ -71,7 +71,8 @@ class FileSpecificViews:
                 hoedown.HtmlRenderer(hoedown.HTML_TOC_TREE),
                 hoedown.EXT_TABLES).render(source)
             html = render('template/markdown.pt', {"request": self.request, "html": html})
-        return dict(request=self.request, html=html, files=dict(), folders=['.', '..'])
+        return dict(request=self.request, html=html, files=dict(), folders=['.', '..'],
+                    logged_in=self.request.authenticated_userid)
 
     @view_config(route_name='matlab', renderer='template/index.pt', permission='authenticatedusers')
     def matlab(self):
@@ -80,7 +81,8 @@ class FileSpecificViews:
         with open_resource(matlab_path) as matlab_file:
             source = matlab_file.read()
             matlab_html = render('template/matlab.pt', {"request": self.request, "html": source})
-        return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'])
+        return dict(request=self.request, html=matlab_html, files=dict(), folders=['.', '..'],
+                    logged_in=self.request.authenticated_userid)
 
     @view_config(route_name='jsonviewer', renderer='template/index.pt', permission='authenticatedusers')
     @view_config(route_name='jsonviewer_plain', renderer='json', permission='authenticatedusers')
@@ -105,7 +107,8 @@ class FileSpecificViews:
             json_html = render('template/json_view.pt', dict(request=self.request,
                                                              jsonencoded=source,
                                                              filename=self.request.matchdict['file']))
-            return dict(request=self.request, html=json_html, files=dict(), folders=['.', '..'])
+            return dict(request=self.request, html=json_html, files=dict(), folders=['.', '..'],
+                        logged_in=self.request.authenticated_userid)
 
     @view_config(route_name='matlabfileviewer', renderer='template/index.pt', permission='authenticatedusers')
     @view_config(route_name='matlabfileviewer_subpath', permission='authenticatedusers')

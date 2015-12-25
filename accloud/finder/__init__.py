@@ -8,7 +8,7 @@ from pyramid.config import Configurator
 from pyramid.static import static_view
 
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
-from .security import groupfinder
+from .security import UserManager, PythonUserManager, FileBasedUserManager
 
 
 def root_factory(settings):
@@ -24,8 +24,18 @@ def root_factory(settings):
 
 
 def main(global_config, **settings):
+
+    if settings['authentication'] not in settings:
+        settings['usermanager'] = PythonUserManager()
+    else:
+        if settings['authentication'] == 'standard':
+            if settings['authentication.model'] == 'FileBased':
+                settings['usermanager'] = FileBasedUserManager()
+            elif settings['authentication.model'] == 'PythonBased':
+                settings['usermanager'] = PythonUserManager
+
     secrethash = settings['secret'] if 'secret' in settings else 'sosecret'
-    authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=groupfinder, hashalg='sha512')
+    authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=settings['usermanager'].groupfinder, hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
     config = Configurator(settings=settings, root_factory=root_factory(settings))
     config.set_authentication_policy(authn_policy)
@@ -43,6 +53,7 @@ def main(global_config, **settings):
 
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
+    config.add_route('usermanagement', '/um')
 
     fileroutes = [dict(route_name='markdown', file_extension='\.md', options=None),
                   dict(route_name='csv', file_extension='\.csv', options=None),
