@@ -31,10 +31,10 @@ def load_usermanager(settings):
     else:
         if settings['authentication'] == 'standard':
             if settings['authentication.model'] == 'FileBased':
-                log.debug('File based logger initiated')
-                settings['usermanager'] = FileBasedUserManager()
+                log.debug('FileBased usermanager initiated')
+                settings['usermanager'] = FileBasedUserManager(settings['root_dir'])
             elif settings['authentication.model'] == 'PythonBased':
-                log.debug('Python based logger initiated')
+                log.debug('Python-Based logger initiated')
                 settings['usermanager'] = PythonUserManager()
         elif settings['authentication'] == 'None':
             settings['usermanager'] = PythonUserManager()

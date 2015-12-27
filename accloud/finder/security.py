@@ -46,7 +46,7 @@ class UserManager:
         pass
 
     def addUser(self, username, password, active, roles):
-		pass
+        pass
 
     def allUsers(self):
         pass
@@ -99,6 +99,9 @@ class FileBasedUserManager(UserManager):
     def _load(self):
         if os.path.exists(self._userfile) and os.path.isfile(self._userfile):
             self._customized = True
+            if os.path.exists(self._userfile) is False:
+                self._log.warning('Userfile doesnt exist {0}'.format(self._userfile))
+                return
             with open(self._userfile, "r") as f:
                 data = yaml.safe_load(f)
                 for name in data.keys():
@@ -135,9 +138,10 @@ class FileBasedUserManager(UserManager):
             self._dirty = False
         self._load()
 
-    def __init__(self):
+    def __init__(self, root_url):
         UserManager.__init__(self)
-        userfile = "C:/code/users.yaml"
+        self._log = logging.getLogger(__name__)
+        userfile = os.path.join(root_url, '.users.yaml')
         self._userfile = userfile
         self._users = dict()
         self._customized = None
