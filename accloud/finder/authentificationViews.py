@@ -66,6 +66,7 @@ class AuthentificationViews:
 
             if matchdict['action'] == 'updateuser':
                 try:
+                    log.info('Update user {0}'.format(matchdict['id']))
                     self.request.registry.settings['usermanager'].update_user(matchdict['id'],
                                                                              params['username'],
                                                                              params['useractive'],
@@ -78,15 +79,13 @@ class AuthentificationViews:
                 # let the request run through
                 if matchdict['id'] == params['username']:
                     try:
+                        log.info('Delete user: {0}'.format(matchdict['id']))
                         self.request.registry.settings['usermanager'].delete_user(matchdict['id'])
                     except BaseException as e:
                         log.warning(e.message)
                         error = str(e.message)
                     return {'error': error}
             elif matchdict['action'] == 'adduser':
-                log.info('NOT YET IMPLEMENTED: add user action')
-                log.debug(matchdict)
-                log.debug(params)
                 if matchdict['id'] == 'newuser':
                     try:
                         log.info('Try to add user "{0}" now'.format(params['username']))

@@ -2,16 +2,15 @@
 import logging
 import os
 from wsgiref.simple_server import make_server
-
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.static import static_view
-
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
 from .security import UserManager, PythonUserManager, FileBasedUserManager
 
 log = logging.getLogger(__name__)
+
 
 def root_factory(settings):
     if 'authentication' not in settings:
@@ -24,6 +23,7 @@ def root_factory(settings):
     else:
         raise BaseException('Error: Unknown authentication setting [{0}]'.format(auth))
 
+
 def load_usermanager(settings):
     if 'authentication' not in settings:
         settings['usermanager'] = PythonUserManager()
@@ -35,13 +35,17 @@ def load_usermanager(settings):
                 settings['usermanager'] = FileBasedUserManager()
             elif settings['authentication.model'] == 'PythonBased':
                 log.debug('Python based logger initiated')
-                settings['usermanager'] = PythonUserManager
+                settings['usermanager'] = PythonUserManager()
+        elif settings['authentication'] == 'None':
+            settings['usermanager'] = PythonUserManager()
     return settings
+
 
 def main(global_config, **settings):
     settings = load_usermanager(settings)
     secrethash = settings['secret'] if 'secret' in settings else 'sosecret'
-    authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=settings['usermanager'].groupfinder, hashalg='sha512')
+    authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=settings['usermanager'].groupfinder,
+                                               hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
     config = Configurator(settings=settings, root_factory=root_factory(settings))
     config.set_authentication_policy(authn_policy)
