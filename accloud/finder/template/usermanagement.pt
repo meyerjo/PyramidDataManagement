@@ -18,6 +18,12 @@
             $('[data-toggle="popover"]').popover()
         });
 
+        var hideAllPopovers = function() {
+           $('[data-toggle="popover"]').each(function() {
+                $(this).popover('hide');
+            });
+        };
+
         var globalusermanagementpath = "${request.route_url('usermanagement')}";
     </script>
     <script tal:attributes="src request.route_url('static', subpath='js/usermanagement.js')"></script>
@@ -95,7 +101,7 @@
                            data-title="Want to delete the user?" data-html="true"
                            data-content="Do you want to delete the user <b>${values.get_name()}</b>?<br/>
                                <a class='btn btn-success deleteuser'>Yes</a>
-                               <a class='btn btn-danger'>No</a>">
+                               <a class='btn btn-danger canceldelete'>No</a>">
                             <i class="fa fa-ban"></i>
                         </a>
                     </td>

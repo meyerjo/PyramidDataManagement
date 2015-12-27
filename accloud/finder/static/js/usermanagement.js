@@ -17,6 +17,12 @@ function get_data_from_row(tablerow) {
         roles: roles_tuples}
 }
 
+var hideAllPopovers = function() {
+    $('[data-toggle="popover"]').each(function() {
+        $(this).popover('hide');
+    });
+};
+
 $(document).on('click', 'a.deleteuser', function() {
     var tablerow = $(this).closest('tr');
     var data = get_data_from_row(tablerow);
@@ -27,9 +33,15 @@ $(document).on('click', 'a.deleteuser', function() {
             if (msg['error'] != null) {
                 alert(msg);
             } else {
+                hideAllPopovers();
                 $(tablerow).remove();
             }
         });
+});
+
+$(document).on('click', 'a.canceldelete', function () {
+    event.preventDefault();
+    hideAllPopovers();
 });
 
 $(document).on('click', 'a.abortuser', function() {
@@ -59,8 +71,6 @@ $(document).on('click', 'a.savenewuser', function () {
                 $(tablerow).find('a.savenewuser').replaceWith('Reload to alter new entry');
             }
         });
-
-
 });
 
 $(document).ready(function() {
@@ -68,7 +78,6 @@ $(document).ready(function() {
     if ( typeof globalusermanagementpath === 'undefined') {
         console.warn('Global usermanagement path is not defined. This wont work')
     }
-
 
     $("a.editbutton").on('click', function() {
         event.preventDefault();
@@ -79,7 +88,6 @@ $(document).ready(function() {
                 $(elem).attr('disabled', false);
             });
         } else {
-
             var data = get_data_from_row(tablerow);
             $.post(globalusermanagementpath + '/updateuser/' + data['oldusername'],
                 {
@@ -105,6 +113,7 @@ $(document).ready(function() {
         var table = $(this).closest('table');
         var tablerow = $(this).closest('tr');
 
+        // get the role list from another row. Drawback always one uer has to exist
         var rolelist = $(table).find('ul:first');
         var cln_role = $(rolelist).clone(true);
         $(cln_role).find('input:checkbox').removeAttr('checked').removeAttr('disabled');
