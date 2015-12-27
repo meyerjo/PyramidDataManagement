@@ -2,6 +2,8 @@ import logging
 
 import jsonpickle
 from pyramid.httpexceptions import HTTPFound
+from pyramid.renderers import render
+from pyramid.response import Response
 from pyramid.security import forget, remember
 from pyramid.view import view_config, forbidden_view_config
 
@@ -53,25 +55,54 @@ class AuthentificationViews:
     @view_config(route_name='usermanagement_action', renderer='json', permission='xedit')
     def usermanagement(self):
         log = logging.getLogger(__name__)
-
+        error = None
         if self.request.matched_route.name == 'usermanagement_action':
             log.debug('Matched the action route, will process the request')
             matchdict = self.request.matchdict
             params = dict(self.request.params)
+
+            if 'roles' in params and isinstance(params['roles'], unicode):
+                params['roles'] = jsonpickle.decode(params['roles'])
+
             if matchdict['action'] == 'updateuser':
-                role_array = jsonpickle.decode(params['roles'])
-                self.request.registry.settings['usermanager'].updateUser(matchdict['id'],
-                                                                         params['username'],
-                                                                         params['useractive'],
-                                                                         role_array)
+                try:
+                    self.request.registry.settings['usermanager'].update_user(matchdict['id'],
+                                                                             params['username'],
+                                                                             params['useractive'],
+                                                                             params['roles'])
+                    return {'error': None}
+                except BaseException as e:
+                    log.warning(e.message)
+                    return {'error': str(e.message)}
             elif matchdict['action'] == 'deleteuser':
-                log.info('NOT YET IMPLEMENTED: delete user action')
+                # let the request run through
+                if matchdict['id'] == params['username']:
+                    try:
+                        self.request.registry.settings['usermanager'].delete_user(matchdict['id'])
+                    except BaseException as e:
+                        log.warning(e.message)
+                        error = str(e.message)
+                    return {'error': error}
             elif matchdict['action'] == 'adduser':
                 log.info('NOT YET IMPLEMENTED: add user action')
-            return {'error': None}
-
-
+                log.debug(matchdict)
+                log.debug(params)
+                if matchdict['id'] == 'newuser':
+                    try:
+                        log.info('Try to add user "{0}" now'.format(params['username']))
+                        self.request.registry.settings['usermanager'].add_user(params['username'],
+                                                                               params['username'].lower(),
+                                                                               params['useractive'],
+                                                                               params['roles'])
+                    except BaseException as e:
+                        log.warning(e.message)
+                        error = str(e.message)
+                    return {'error': error}
 
         users = self.request.registry.settings['usermanager'].allUsers()
         aclgroups = self.request.root.get_all_groups()
-        return dict(folders=[], files=dict(), logged_in=self.logged_in, users=users, request=self.request, aclgroups=aclgroups)
+        renderdict =  dict(folders=[], files=dict(),
+                           logged_in=self.logged_in, users=users,
+                           request=self.request, aclgroups=aclgroups,
+                           error=error)
+        return renderdict

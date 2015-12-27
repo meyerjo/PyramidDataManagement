@@ -14,67 +14,13 @@
     <link rel="stylesheet" type="text/css" tal:attributes="href request.route_url('static', subpath='css/ekko-lightbox.min.css')"/>
     <script tal:attributes="src request.route_url('static', subpath='js/ekko-lightbox.min.js')"></script>
     <script>
-        $(document).ready(function() {
-
-            $("a.editbutton").on('click', function() {
-                event.preventDefault();
-                if ($(this).html().indexOf('fa-pencil') >= 0) {
-                    $(this).html('<i class="fa fa-floppy-o"></i>');
-                    $(this).parent().parent().find(':input').each(function (i, elem) {
-                        $(elem).attr('disabled', false);
-                    });
-                } else {
-
-                    var tablerow = $(this).parent().parent();
-                    var username = $(tablerow).find(':input.oldusername').val();
-                    var newusername = $(tablerow).find(':input.username').val();
-                    var useractive = $(tablerow).find(':input.useractive').is(':checked');
-
-                    var userroles = $(tablerow).find(':input.rolebox');
-                    var roles_tuples = [];
-
-                    $(tablerow).find(':input.rolebox').each(function (i, elem) {
-                        var tuple = [$(elem).is(':checked'), $(elem).val()];
-                        roles_tuples.push(tuple);
-                    });
-
-                    $.post("${request.route_url('usermanagement')}" + '/updateuser/' + username,
-                        {
-                            username: newusername,
-                            useractive: useractive,
-                            roles: JSON.stringify(roles_tuples)
-                        },
-                        function (data, status) {
-                            if (data['error'] != null) {
-                                alert('Fehler');
-                            }
-                        });
-
-                    $(this).html('<i class="fa fa-pencil"></i>');
-                    $(this).parent().parent().find(':input').each(function (i, elem) {
-                        $(elem).attr('disabled', true);
-                    });
-                }
-            });
-
-            $("a.adduser").on('click', function() {
-                event.preventDefault();
-                $(this).parent().parent().before(document.createElement("tr"));
-
-            });
-
-            $("a").on('click', '.deleteuser', function () {
-                event.preventDefault();
-                var tablerow = $(this).parent().parent();
-                var userid = $(tablerow).find(':input.oldusername').val();
-                alert('delete user');
-            })
-
+        $(function () {
+            $('[data-toggle="popover"]').popover()
         });
 
-
-
+        var globalusermanagementpath = "${request.route_url('usermanagement')}";
     </script>
+    <script tal:attributes="src request.route_url('static', subpath='js/usermanagement.js')"></script>
 </head>
 <body>
 <nav class="navbar navbar-inverse">
@@ -109,59 +55,59 @@
 <div class="container-fluid">
     <div class="row-fluid">
         <div class="col-sm-12">
-                <h1>Usermanagement</h1>
-                <table class="table table-striped table-condensed">
-                    <tr>
-                        <th>Name</th>
-                        <th>Roles</th>
-                        <th>Active</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                    <tr tal:repeat="(key, values) users.items()">
-                        <span tal:define="global isobj python:not isinstance(values, unicode)"/>
-                        <td tal:condition="not: isobj" tal:content="key"/>
+            <h1>Usermanagement</h1>
+            <table class="table table-striped table-condensed">
+                <tr>
+                    <th>Name</th>
+                    <th>Roles</th>
+                    <th>Active</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+                <tr tal:repeat="(key, values) users.items()">
+                    <span tal:define="global isobj python:not isinstance(values, unicode)"/>
+                    <td tal:condition="not: isobj" tal:content="key"/>
 
-                        <td tal:condition="isobj">
-                            <input type="hidden" class="oldusername" tal:attributes="value values.get_name()"/>
-                            <input type="text" class="username" tal:attributes="value values.get_name()"  disabled/>
-                        </td>
-                        <td tal:condition="isobj">
-                            <ul tal:define="missingroles python:list(set(aclgroups).difference(set(values.get_roles())))">
-                                <li tal:repeat="role values.get_roles()">
-                                    <label>
-                                        <input type="checkbox" tal:attributes="value role; name role" class="rolebox" checked disabled/>${role}
-                                    </label>
-                                </li>
-                                <li tal:repeat="role missingroles">
-                                    <label>
-                                        <input type="checkbox" tal:attributes="value role; name role" class="rolebox" disabled/>${role}
-                                    </label>
-                                </li>
-                            </ul>
-                        </td>
-                        <td tal:condition="isobj">
-                            <input type="checkbox" class="useractive" tal:attributes="checked values.is_active()" disabled/>
-                        </td>
-                        <td tal:condition="isobj"><a href="#" class="editbutton"><i class="fa fa-pencil"></i></a></td>
-                        <td tal:condition="isobj">
-                            <button role="button" data-toggle="popover" data-placement="top"
-                               data-title="Want to delete the user?" data-html="true"
-                               data-content="Do you want to delete the user <b>${values.get_name()}</b>?<br/>
+                    <td tal:condition="isobj">
+                        <input type="hidden" class="oldusername" tal:attributes="value values.get_name()"/>
+                        <input type="text" class="username" tal:attributes="value values.get_name()"  disabled/>
+                    </td>
+                    <td tal:condition="isobj">
+                        <ul tal:define="missingroles python:list(set(aclgroups).difference(set(values.get_roles())))">
+                            <li tal:repeat="role values.get_roles()">
+                                <label>
+                                    <input type="checkbox" tal:attributes="value role; name role" class="rolebox" checked disabled/>${role}
+                                </label>
+                            </li>
+                            <li tal:repeat="role missingroles">
+                                <label>
+                                    <input type="checkbox" tal:attributes="value role; name role" class="rolebox" disabled/>${role}
+                                </label>
+                            </li>
+                        </ul>
+                    </td>
+                    <td tal:condition="isobj">
+                        <input type="checkbox" class="useractive" tal:attributes="checked values.is_active()" disabled/>
+                    </td>
+                    <td tal:condition="isobj"><a href="#" class="editbutton"><i class="fa fa-pencil"></i></a></td>
+                    <td tal:condition="isobj">
+                        <a role="button" data-toggle="popover" data-placement="top"
+                           data-title="Want to delete the user?" data-html="true"
+                           data-content="Do you want to delete the user <b>${values.get_name()}</b>?<br/>
                                <a class='btn btn-success deleteuser'>Yes</a>
                                <a class='btn btn-danger'>No</a>">
-                                <i class="fa fa-ban"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr tal:condition="isobj">
-                        <td colspan="5">
-                            <a class="adduser">
-                                <i class="fa fa-plus"></i>Add user
-                            </a>
-                        </td>
-                    </tr>
-                </table>
+                            <i class="fa fa-ban"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr tal:condition="isobj">
+                    <td colspan="5">
+                        <a class="adduser">
+                            <i class="fa fa-plus"></i>Add user
+                        </a>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>

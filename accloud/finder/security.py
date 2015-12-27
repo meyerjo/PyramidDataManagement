@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 
 import yaml
@@ -8,6 +9,7 @@ from accloud.users import User
 
 class UserManager:
     def __init__(self):
+        self._log = logging.getLogger(__name__)
         pass
 
     @staticmethod
@@ -49,7 +51,10 @@ class UserManager:
     def allUsers(self):
         pass
 
-    def updateUser(self, user_id, username, active, group=None):
+    def update_user(self, user_id, username, active, group=None):
+        pass
+
+    def delete_user(self, user_id):
         pass
 
 
@@ -160,14 +165,24 @@ class FileBasedUserManager(UserManager):
             user = user.asDict()
             return user['roles']
 
-    def addUser(self, username, password, active, roles):
+    def add_user(self, username, password, active, roles):
         passworddict = self.createPasswordHash(password)
-        user = User(username, passworddict['password'], active, [], None, None, passworddict['salt'])
+
+        updated_roles = []
+        for role in roles:
+            if isinstance(role, tuple) or isinstance(role, list):
+                if role[0]:
+                    updated_roles.append(role[1])
+            else:
+                updated_roles = roles
+                break
+
+        user = User(username, passworddict['password'], active, updated_roles, None, None, passworddict['salt'])
         self._users[username] = user
         self._dirty = True
         self._save()
 
-    def updateUser(self, user_id, username, active, roles=None):
+    def update_user(self, user_id, username, active, roles=None):
         if user_id in self._users:
             user = self._users[user_id]
             user.set_username(user_id, username)
@@ -177,6 +192,13 @@ class FileBasedUserManager(UserManager):
 
             if user_id != username:
                 del self._users[user_id]
+            self._dirty = True
+            self._save()
+
+    def delete_user(self, user_id):
+        if user_id in self._users:
+            self._log.info('Delete User: ' + user_id)
+            del self._users[user_id]
             self._dirty = True
             self._save()
 
