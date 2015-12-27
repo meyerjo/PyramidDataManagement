@@ -51,8 +51,8 @@ class AuthentificationViews:
         return HTTPFound(location=self.request.resource_url(self.request.context),
                          headers=headers)
 
-    @view_config(route_name='usermanagement', renderer='template/usermanagement.pt', permission='xedit')
-    @view_config(route_name='usermanagement_action', renderer='json', permission='xedit')
+    @view_config(route_name='usermanagement', renderer='template/usermanagement.pt', permission='nooneshouldhavethispermission')
+    @view_config(route_name='usermanagement_action', renderer='json', permission='nooneshouldhavethispermission')
     def usermanagement(self):
         log = logging.getLogger(__name__)
         error = None

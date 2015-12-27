@@ -82,6 +82,7 @@
                 </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
+                <li tal:condition="request.has_permission('nooneshouldhavethispermission')"><a class="btn btn-inverse btn-md" href="/um">UserManagement</a></li>
                 <li tal:condition="exists: localsettingsfile"><a class="btn btn-inverse btn-md" href=".settings.json" tal:condition="localsettingsfile">Update local settings file</a></li>
                 <li tal:condition="exists: localsettingsfile"><a class="btn btn-inverse btn-md" href="?createlocalsettingsfile" tal:condition="not localsettingsfile">Create local settings file</a></li>
                 <li tal:condition="logged_in"><a class="btn btn-inverse btn-md" href="${request.application_url}/logout">Logout</a></li>
