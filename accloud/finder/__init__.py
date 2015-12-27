@@ -1,4 +1,5 @@
 '''HTTP Server and Request Handlers to explore ACcloud experiments'''
+import logging
 import os
 from wsgiref.simple_server import make_server
 
@@ -10,6 +11,7 @@ from pyramid.static import static_view
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
 from .security import UserManager, PythonUserManager, FileBasedUserManager
 
+log = logging.getLogger(__name__)
 
 def root_factory(settings):
     if 'authentication' not in settings:
@@ -22,18 +24,22 @@ def root_factory(settings):
     else:
         raise BaseException('Error: Unknown authentication setting [{0}]'.format(auth))
 
-
-def main(global_config, **settings):
-
-    if settings['authentication'] not in settings:
+def load_usermanager(settings):
+    if 'authentication' not in settings:
         settings['usermanager'] = PythonUserManager()
+        log.debug('No Authentication model found in settings {0}'.format(settings))
     else:
         if settings['authentication'] == 'standard':
             if settings['authentication.model'] == 'FileBased':
+                log.debug('File based logger initiated')
                 settings['usermanager'] = FileBasedUserManager()
             elif settings['authentication.model'] == 'PythonBased':
+                log.debug('Python based logger initiated')
                 settings['usermanager'] = PythonUserManager
+    return settings
 
+def main(global_config, **settings):
+    settings = load_usermanager(settings)
     secrethash = settings['secret'] if 'secret' in settings else 'sosecret'
     authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=settings['usermanager'].groupfinder, hashalg='sha512')
     authz_policy = ACLAuthorizationPolicy()
@@ -44,9 +50,9 @@ def main(global_config, **settings):
     config.registry.settings['directory_settings'] = dict()
 
     # load directory settings
-    print('Load settings')
+    log.info('Load settings')
     DirectoryLoadSettings().load_server_settings(config.registry.settings['root_dir'], config)
-    print('Adding routes')
+    log.info('Adding routes')
 
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
@@ -54,6 +60,7 @@ def main(global_config, **settings):
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
     config.add_route('usermanagement', '/um')
+    config.add_route('usermanagement_action', '/um/{action}/{id}')
 
     fileroutes = [dict(route_name='markdown', file_extension='\.md', options=None),
                   dict(route_name='csv', file_extension='\.csv', options=None),
@@ -73,7 +80,7 @@ def main(global_config, **settings):
     config.add_route('static', '/_static/*subpath')
     config.add_route('files', '/*subpath', permission='authenticatedusers')
 
-    print('Add views')
+    log.info('Add views')
     here = lambda p: os.path.join(os.path.abspath(os.path.dirname(__file__)), p)
     static = static_view(here('static'), use_subpath=True)
     files = static_view(

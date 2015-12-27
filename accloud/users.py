@@ -35,6 +35,27 @@ class User:
     def get_all_settings(self):
         return self._settings
 
+    def get_roles(self):
+        return self._roles
+
+    def set_username(self, old_username, new_username):
+        if self.get_name() == old_username:
+            self._username = new_username
+
+    def set_roles(self, roles):
+        for role in roles:
+            if (isinstance(role, tuple) or \
+                    isinstance(role, list)) and len(role) > 1:
+                rolename = role[1]
+                if role[0]:
+                    self._roles = list(set(self._roles + [rolename]))
+                elif rolename in self._roles:
+                        self._roles.remove(rolename)
+            else:
+                self._roles = role
+                break
+
+
     def get_setting(self, key):
         if not isinstance(key, (tuple, list)):
             path = [key]

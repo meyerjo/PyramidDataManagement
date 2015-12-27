@@ -49,6 +49,11 @@ class UserManager:
     def allUsers(self):
         pass
 
+    def updateUser(self, user_id, username, active, group=None):
+        pass
+
+
+
 
 class PythonUserManager(UserManager):
     _USERS = {'editor': 'editor',
@@ -124,7 +129,6 @@ class FileBasedUserManager(UserManager):
             yaml.safe_dump(data, f, default_flow_style=False, indent="    ", allow_unicode=True)
             self._dirty = False
         self._load()
-        print(self._users)
 
     def __init__(self):
         UserManager.__init__(self)
@@ -134,13 +138,11 @@ class FileBasedUserManager(UserManager):
         self._customized = None
         self._dirty = False
         self._load()
-        print(self._users)
 
     def get_username(self, username):
         if self._users is None:
             print('User Array is None')
             return None
-        print(self._users)
         user = self._users.get(username)
         return user
 
@@ -152,7 +154,6 @@ class FileBasedUserManager(UserManager):
         hashdict = self.createPasswordHash(password, userdict['salt'])
         return user.check_password(hashdict['password'])
 
-
     def groupfinder(self, userid, request):
         user = self.get_username(userid)
         if user is not None:
@@ -160,12 +161,25 @@ class FileBasedUserManager(UserManager):
             return user['roles']
 
     def addUser(self, username, password, active, roles):
-        print('add user')
         passworddict = self.createPasswordHash(password)
         user = User(username, passworddict['password'], active, [], None, None, passworddict['salt'])
         self._users[username] = user
         self._dirty = True
         self._save()
+
+    def updateUser(self, user_id, username, active, roles=None):
+        if user_id in self._users:
+            user = self._users[user_id]
+            user.set_username(user_id, username)
+            self._users[username] = user
+            if roles is not None:
+                user.set_roles(roles)
+
+            if user_id != username:
+                del self._users[user_id]
+            self._dirty = True
+            self._save()
+
 
     def allUsers(self):
         return self._users
