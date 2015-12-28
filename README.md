@@ -53,6 +53,50 @@ The field specific_filetemplates, contains a dictionary of behaviour rules for s
 Furthermore it is specified that always 2 pictures should be displayed in one row. The last field is the template used to display the files.
 
 
+# Authentication
+It is possible to add an authentication layer to the server. If you wish so you can add --authentication = standard and --authenticationmodel = FileBased to the server call. The server expects a .users.yaml file in the root_dir.
+
+**Note:**
+The .users.yaml file doesn't get auto-generated at the moment. You can use the following snippet as a start and generate your own users later on.
+
+Username: admin
+Password: admin
+```
+
+admin:
+
+  active: 'true'
+  
+  apikey: null
+  
+  password: 805d3d8280a360c310ddb42fe7f034be6a7781c1ed69de8a9b68e684280eafd0c16cba0f52c39b4657aeddd7244e76d137a47af559da35581aabe437180cf5a5
+  
+  roles:
+  
+  - g:admin
+  
+  salt: 'QEpO3ClIa3fN2jm3/m8BRw==
+
+    '
+    
+  settings: {}
+  
+```
+
+
+
+# Run server instance
+
+Two options to run the server
+
+python bin/Finder [options]
+
+pserve [bin/production.ini, bin/development.ini] <-- recommended method
+
+
+
+
+
 # TODO
 ## Done/Partial
 * new directories have to be detected and the directory_settings from the parent folder should be used - Done
@@ -66,6 +110,7 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
 * download a specific subset as a zip container - done
 * add a button/view to manipulate the .settings.json file - done
 * filename specific preview option ==> change the identificator for filespecific templates to a regex string (i.e. README.md) - done
+* user authentication - done
 
 ## Open
 * add favorite files, which can be displayed in other folders
@@ -74,5 +119,4 @@ Furthermore it is specified that always 2 pictures should be displayed in one ro
   * add a inputbox to each row or use something like a feedback slider (e.g https://github.com/vedmack/feedback_me)
 * disable specific keys in folder/presentation view
   * assign ids to the specific key entries and add a widget to select/deselect them
-* user authentication
 * store "presentations" in a specific format

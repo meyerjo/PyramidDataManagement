@@ -25,7 +25,14 @@ parser.add_argument(
     nargs='?',
     default='None',
     type=str,
-    help='Specify authentication method'
+    help='Specify authentication method [None=default, standard]'
+)
+parser.add_argument(
+    '--authenticationmodel',
+    nargs='?',
+    default='PythonBased',
+    type=str,
+    help='Specify the method how to authenticate users if the --authentication=standard [PythonBased, FileBased]'
 )
 args = parser.parse_args()
 
@@ -36,7 +43,8 @@ settings = {
     'root_dir': args.dir,
     'port': args.port,
     'trace': args.debug,
-    'authentication': args.authentication
+    'authentication': args.authentication,
+    'authentication.model': args.authenticationmodel
 }
 if args.debug:
     import pdb
