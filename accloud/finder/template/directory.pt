@@ -7,7 +7,9 @@ Found dir: ${dir}
                 <span tal:define="global extension key;"></span>
             </div>
             <span tal:content="key" class="keyelement" tal:attributes="id key"></span>
-            <button class="btn btn-warning selectbutton" data-toggle="popover" data-html="true" title="" data-content="">Subkeys</button>
+            <button class="btn btn-default" data-toggle="popover" data-html="true" title="" data-content="">
+                <img tal:attributes="src request.route_url('static', subpath='css/img/item_list.ico')" style="width: 16px; height:16px;"/>
+            </button>
                 <a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
                 <a href="?zipfile&specific=${key}" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
             <ul tal:condition="python: not isinstance(values, dict)" class="fa-ul">

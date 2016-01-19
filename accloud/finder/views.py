@@ -67,7 +67,8 @@ class DirectoryRequest:
 
         # send it to the general directory view
         directory_entry = render(custom_directory_template_path, dict(dir=self.request.matchdict['dir'],
-                                                                      visible_items_by_extension=visible_items_by_extension))
+                                                                      visible_items_by_extension=visible_items_by_extension,
+                                                                      request=self.request))
 
         custom_index_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings, 'custom_index_path',
                                                                'template/index.pt')
