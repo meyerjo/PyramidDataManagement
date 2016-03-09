@@ -70,7 +70,6 @@ class MarkdownExport:
         itemgrouper = ItemGrouper()
         visible_items_by_extension, visibleitems, invisibleitems = itemgrouper.group_folder(listing, directory_settings)
 
-
         # filter the specific file extension
         if filter is not None:
             if filter in visible_items_by_extension:
@@ -124,8 +123,11 @@ class PresentationMarkdownExport(MarkdownExport):
                     # TODO: make this recursive becaus so far, it only can handle a fixed depth of array(array(elements))
                     expected_items = max(expected_items, len(item))
                     # implement specific behaviour for some files
+                    if len(item) == 0:
+                        continue
                     firstitem = item[0]
                     if isinstance(firstitem, unicode) or isinstance(firstitem, str):
+                        # implement specific behaviour for some files
                         filemime = mimetypes.guess_type(firstitem)
                         if re.match('^image', filemime[0]):
                             output += self._markdown_table(item, expected_items)

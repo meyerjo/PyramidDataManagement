@@ -81,7 +81,7 @@ class ItemGrouper:
             if len(tmp_group) == elements_per_group:
                 groups.append(tmp_group)
                 tmp_group = []
-        if tmp_group is not []:
+        if len(tmp_group) > 0:
             groups.append(tmp_group)
         return groups
 
