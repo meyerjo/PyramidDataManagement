@@ -197,9 +197,10 @@ class ItemGrouper:
             errors.append(e.message)
         elements_per_row = extension_specific['elements_per_row']
 
-        grouping_method = extension_specific['grouping_method'] if 'grouping_method' in extension_specific else None
-
-        row_group_files = self._split_files_into_subgroups(grouped_files, elements_per_row, grouping_method)
+        if 'grouping_method' not in extension_specific:
+            row_group_files = self._split_files_into_subgroups(grouped_files, elements_per_row)
+        else:
+            row_group_files = self._split_files_into_subgroups(grouped_files, elements_per_row, extension_specific['grouping_method'])
         return row_group_files, errors
 
     def group(self, items, elements_per_group, method='numerical'):
