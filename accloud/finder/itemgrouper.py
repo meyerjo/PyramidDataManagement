@@ -181,7 +181,7 @@ class ItemGrouper:
             return self.group(input, items_per_row, grouping_method)
         elif isinstance(input, dict):
             for (key, value) in input.items():
-                input[key] = self._split_files_into_subgroups(value, items_per_row)
+                input[key] = self._split_files_into_subgroups(value, items_per_row, grouping_method)
             return input
         else:
             print('Something went wrong. The type of the input isn\'t a dict '
@@ -196,7 +196,10 @@ class ItemGrouper:
             grouped_files = []
             errors.append(e.message)
         elements_per_row = extension_specific['elements_per_row']
-        row_group_files = self._split_files_into_subgroups(grouped_files, elements_per_row)
+
+        grouping_method = extension_specific['grouping_method'] if 'grouping_method' in extension_specific else None
+
+        row_group_files = self._split_files_into_subgroups(grouped_files, elements_per_row, grouping_method)
         return row_group_files, errors
 
     def group(self, items, elements_per_group, method='numerical'):
