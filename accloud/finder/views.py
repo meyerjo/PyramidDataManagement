@@ -1,10 +1,12 @@
 import os
 
+import jsonpickle
 from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import (
     view_config,
 )
+from webob.multidict import MultiDict
 
 from accloud.finder.directoryExportHandlers import PresentationExportHandler, ReportExportHandler
 from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
@@ -34,8 +36,9 @@ class DirectoryRequest:
         else:
             return None
 
-    @view_config(route_name='directory', permission='authenticatedusers')
+    @view_config(route_name='directory', permission='authenticatedusers', request_method='GET')
     def directory(self):
+        # TODO: load the description files
         relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
         listing = os.listdir(relative_path)
         relative_path = str(os.path.abspath(relative_path)).encode('string-escape')
@@ -77,3 +80,26 @@ class DirectoryRequest:
                                localsettingsfile=localsettingsfileexists,
                                logged_in=self.request.authenticated_userid)
         return Response(render(custom_index_path, index_parameter))
+
+    @view_config(route_name='directory', permission='authenticatedusers', request_method='POST')
+    def directory_config(self):
+        if 'save_target' in self.request.POST:
+            description_obj = {}
+            if 'shortdescription' in self.request.POST and 'longdescription' in self.request.POST:
+                description_obj['shortdescription'] = self.request.POST['shortdescription']
+                description_obj['longdescription'] = self.request.POST['longdescription']
+
+                try:
+                    relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
+                    relative_path = relative_path if relative_path.endswith('/') else relative_path + '/'
+                    save_path = '{0}.description.json'.format(relative_path)
+                    # Always overwrite the old description file. Perhaps we should be less strict
+                    with open(save_path, 'w') as json_file:
+                        json_file.write(jsonpickle.encode(description_obj))
+                except BaseException as e:
+                    # TODO: how to handle this? somehow not so easy to set new get parameters
+                    print(str(e))
+
+        subreq = self.request.copy()
+        subreq.method = 'GET'
+        return self.request.invoke_subrequest(subreq)

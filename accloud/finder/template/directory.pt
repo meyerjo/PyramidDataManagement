@@ -1,23 +1,54 @@
-Found dir: ${dir}
+<div class="row">
+    <div class="col-sm-9">
+    Found dir: ${dir}
     <a href="?presentation" alt="Create presentation"><i class="fa fa-desktop"></i></a>
     <a href="?zipfile" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
-    <ul metal:define-macro="filter_depth" >
-        <li tal:repeat="(key, values) sorted(visible_items_by_extension.items())" tal:attributes="id key">
-            <div tal:condition="python: key.startswith('.') or not key">
-                <span tal:define="global extension key;"></span>
-            </div>
-            <span tal:content="key" class="keyelement" tal:attributes="id key"></span>
-            <button class="btn btn-default" data-toggle="popover" data-html="true" title="" data-content="">
-                <img tal:attributes="src request.route_url('static', subpath='css/img/item_list.ico')" style="width: 16px; height:16px;"/>
-            </button>
-                <a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
-                <a href="?zipfile&specific=${key}" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
-            <ul tal:condition="python: not isinstance(values, dict)" class="fa-ul">
-                <li tal:repeat="value sorted(values)">
-                    <ul tal:condition="python: isinstance(value, dict)" metal:use-macro="template.macro['filter_depth']"/>
+    </div>
+    <div class="col-sm-3">
+        <input type="text" placeholder="search... (not yet impl)" name="searchfield" id="searchfield" class="input-lg"/>
+    </div>
+</div>
+<form method="post">
+<div class="row">
+        <div class="col-sm-1">
+            Kurzbeschreibung:
+        </div>
+        <div class="col-sm-6">
+            <input type="text" name="shortdescription" class="input-lg" style="width: 100%;">
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" name="save_target" value="short" class="btn btn-default">Speichern</button>
+        </div>
+</div>
+<div class="row">
+        <div class="col-sm-1">
+            Beschreibung:
+        </div>
+        <div class="col-sm-6">
+            <textarea name="longdescription" rows="10" style="width: 100%;"></textarea>
+        </div>
+        <div class="col-sm-3">
+            <button type="submit" name="save_target" value="long" class="btn btn-default">Speichern</button>
+        </div>
+</div>
+</form>
+<ul metal:define-macro="filter_depth" >
+    <li tal:repeat="(key, values) sorted(visible_items_by_extension.items())" tal:attributes="id key">
+        <div tal:condition="python: key.startswith('.') or not key">
+            <span tal:define="global extension key;"></span>
+        </div>
+        <span tal:content="key" class="keyelement" tal:attributes="id key"></span>
+        <button class="btn btn-default" data-toggle="popover" data-html="true" title="" data-content="">
+            <img tal:attributes="src request.route_url('static', subpath='css/img/item_list.ico')" style="width: 16px; height:16px;"/>
+        </button>
+        <a href="?presentation&specific=${key}" alt="Create presentation"><i class="fa fa-desktop"></i></a>
+        <a href="?zipfile&specific=${key}" alt="Download as zipcontainer"><i class="fa fa-file-archive-o"></i></a>
+        <ul tal:condition="python: not isinstance(values, dict)" class="fa-ul">
+            <li tal:repeat="value sorted(values)">
+                <ul tal:condition="python: isinstance(value, dict)" metal:use-macro="template.macro['filter_depth']"/>
                     <span tal:condition="python: not isinstance(value, dict)">
                         <div tal:condition="python: value.startswith('<')" tal:attributes="id key">
-                            ${structure: value}
+                                ${structure: value}
                         </div>
                         <div tal:condition="python: not value.startswith('<')">
                             <i class="fa fa-file"  tal:condition="python: extension != ''"></i>
@@ -25,10 +56,10 @@ Found dir: ${dir}
                             <a tal:attributes="href value" tal:content="value"/>
                         </div>
                     </span>
-                </li>
-            </ul>
-            <div tal:condition="python: isinstance(values, dict) and key != ''" tal:define="visible_items_by_extension values">
-                <ul metal:use-macro="template.macros['filter_depth']"></ul>
-            </div>
-        </li>
-    </ul>
+            </li>
+        </ul>
+        <div tal:condition="python: isinstance(values, dict) and key != ''" tal:define="visible_items_by_extension values">
+            <ul metal:use-macro="template.macros['filter_depth']"></ul>
+        </div>
+    </li>
+</ul>
