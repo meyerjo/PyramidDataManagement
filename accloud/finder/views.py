@@ -36,6 +36,23 @@ class DirectoryRequest:
         else:
             return None
 
+    def _get_custom_directory_description(self, subfolder=None):
+        relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
+        if subfolder is None:
+            description_file = '{0}.description.json'.format(
+                relative_path if relative_path.endswith('/') else relative_path + '/')
+        else:
+            description_file = '{0}{1}/.description.json'.format(
+                relative_path if relative_path.endswith('/') else relative_path + '/', subfolder)
+        try:
+            with open(description_file) as f:
+                str_file = f.read()
+                description = jsonpickle.decode(str_file)
+        except BaseException as e:
+            print(str(e))
+            description = {'longdescription': '', 'shortdescription': ''}
+        return description
+
     @view_config(route_name='directory', permission='authenticatedusers', request_method='GET')
     def directory(self):
         # TODO: load the description files
@@ -47,6 +64,9 @@ class DirectoryRequest:
         # load settings, and reload if necessary
         directory_settings = self.request.registry.settings['directory_settings']
         directory_settings = DirectoryLoadSettings.handle_request(self.request, relative_path, directory_settings)
+
+        # load custom description
+        description = self._get_custom_directory_description()
 
         # TODO: Check whether there is a more 'clean' way to handle these specific requests
         custom_response = self._custom_request_handler(relative_path, directory_settings)
@@ -61,6 +81,11 @@ class DirectoryRequest:
         if '' in files:
             del files['']
 
+        testdict = dict()
+        for f in folders:
+            testdict[f] = self._get_custom_directory_description(f)
+        print(testdict)
+
         # apply specific to the items
         visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings)
 
@@ -71,6 +96,7 @@ class DirectoryRequest:
         # send it to the general directory view
         directory_entry = render(custom_directory_template_path, dict(dir=self.request.matchdict['dir'],
                                                                       visible_items_by_extension=visible_items_by_extension,
+                                                                      description=description,
                                                                       request=self.request))
 
         custom_index_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings, 'custom_index_path',
@@ -88,7 +114,6 @@ class DirectoryRequest:
             if 'shortdescription' in self.request.POST and 'longdescription' in self.request.POST:
                 description_obj['shortdescription'] = self.request.POST['shortdescription']
                 description_obj['longdescription'] = self.request.POST['longdescription']
-
                 try:
                     relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
                     relative_path = relative_path if relative_path.endswith('/') else relative_path + '/'

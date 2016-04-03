@@ -8,13 +8,13 @@
         <input type="text" placeholder="search... (not yet impl)" name="searchfield" id="searchfield" class="input-lg"/>
     </div>
 </div>
-<form method="post">
+<form method="post" tal:condition="exists: description">
 <div class="row">
         <div class="col-sm-1">
             Kurzbeschreibung:
         </div>
         <div class="col-sm-6">
-            <input type="text" name="shortdescription" class="input-lg" style="width: 100%;">
+            <input type="text" name="shortdescription" class="input-lg" style="width: 100%;" tal:attributes="value description['shortdescription']">
         </div>
         <div class="col-sm-3">
             <button type="submit" name="save_target" value="short" class="btn btn-default">Speichern</button>
@@ -25,7 +25,7 @@
             Beschreibung:
         </div>
         <div class="col-sm-6">
-            <textarea name="longdescription" rows="10" style="width: 100%;"></textarea>
+            <textarea name="longdescription" rows="5" style="width: 100%;">${description['longdescription']}</textarea>
         </div>
         <div class="col-sm-3">
             <button type="submit" name="save_target" value="long" class="btn btn-default">Speichern</button>
@@ -54,6 +54,7 @@
                             <i class="fa fa-file"  tal:condition="python: extension != ''"></i>
                             <i class="fa fa-folder" tal:condition="python: extension == ''"></i>
                             <a tal:attributes="href value" tal:content="value"/>
+                            <span tal:condition="python: extension == ''" tal:content="Test"></span>
                         </div>
                     </span>
             </li>
