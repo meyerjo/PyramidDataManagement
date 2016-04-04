@@ -111,12 +111,19 @@ pserve [bin/production.ini, bin/development.ini] <-- recommended method
 * add a button/view to manipulate the .settings.json file - done
 * filename specific preview option ==> change the identificator for filespecific templates to a regex string (i.e. README.md) - done
 * user authentication - done
+* disable specific keys in folder/presentation view - done / see below
+    * assign ids to the specific key entries and add a widget to select/deselect them - done / see below
+* allow user to add comments to a folder about content contained - done
 
 ## Open
 * add favorite files, which can be displayed in other folders
 * file-based preprocessing i.e. convert pptx files to another kind of documnet which can be visualized in a presentation
-* allow user to add comments to a folder about content contained
-  * add a inputbox to each row or use something like a feedback slider (e.g https://github.com/vedmack/feedback_me)
-* disable specific keys in folder/presentation view
-  * assign ids to the specific key entries and add a widget to select/deselect them
-* store "presentations" in a specific format
+* add a inputbox to each row or use something like a feedback slider (e.g https://github.com/vedmack/feedback_me)
+* store "presentations" in a specific format and make them editable
+* fix the item selection bug
+    * for some reason you have to click twice before the menu opens
+    * the menu looses the information which items are saved
+* store the item selection
+* auto save the description fields, user-dependent
+* search function on webpage
+ 
