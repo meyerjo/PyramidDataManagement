@@ -13,8 +13,15 @@ requires = [
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'waitress',
-    'python-Levenshtein', 'jsonpickle', 'pdfkit', 'markdown', 'h5py', 'Cython'
+    'python-Levenshtein',
+    'jsonpickle',
+    'pdfkit',
+    'markdown'
 ]
+
+extra_requires = {
+    'matfiles_extractor': ['h5py', 'Cython']
+}
 
 setup(name='accloud',
       version='0.2',
@@ -34,6 +41,7 @@ setup(name='accloud',
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
+      extra_requires=extra_requires,
       entry_points={
           'console_scripts': ['boxplot-validations=accloud.plots.boxplot_validations:main']
       },
@@ -42,6 +50,10 @@ setup(name='accloud',
 
 
 setup(name='finder',
+      author='Johannes Meyer',
+      author_email='meyerjo@tf.uni-freiburg.de',
+      keywords='framework presentation web',
+      extra_requires=extra_requires,
       install_requires=requires,
       entry_points="""\
       [paste.app_factory]
