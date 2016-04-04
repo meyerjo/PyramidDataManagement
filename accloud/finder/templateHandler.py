@@ -55,7 +55,13 @@ class TemplateHandler:
         return html
 
     def apply_templates(self, dict_items, directory_settings, folder_descriptions=None):
+        """
+        Apply the template specified in the direcotry settings to all elements in the dict_items dictionary
+        """
         logger = logging.getLogger(__name__)
+        assert(isinstance(dict_items, dict))
+        if not isinstance(directory_settings, dict):
+            logger.warning('Directory settings is not a dictionary {0}'.format(type(directory_settings)))
         # apply specific to the items
         for (filter_criteria, filenames) in dict_items.items():
             folder_template = None if 'folder_template' not in directory_settings else directory_settings[
@@ -69,15 +75,15 @@ class TemplateHandler:
                 html = self._apply_specific_templates(filenames, extension_specific)
                 dict_items[filter_criteria] = [html]
             else:
+                # check for the template
                 template = None
-                folder = False
                 if filter_criteria != '' and not filter_criteria == '..' and file_template is not None:
                     template = PageTemplate(file_template)
                 elif filter_criteria == '' and folder_template is not None:
                     template = PageTemplate(folder_template)
-                    folder = True
                 else:
-                    logger.warning('Unknown filter_criteria')
+                    logger.warning('Unknown filter_criteria "{0}"'.format(filter_criteria))
+                # apply elements to the template
                 if template is not None:
                     tmp = []
                     for file in filenames:
@@ -88,5 +94,5 @@ class TemplateHandler:
                             tmp.append(template(item=file))
                     dict_items[filter_criteria] = tmp
                 else:
-                    logger.warning('template is not set')
+                    logger.warning('Template is not set')
         return dict_items
