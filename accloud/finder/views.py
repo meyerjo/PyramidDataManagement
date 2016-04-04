@@ -1,3 +1,4 @@
+import logging
 import os
 
 import jsonpickle
@@ -81,18 +82,16 @@ class DirectoryRequest:
         if '' in files:
             del files['']
 
-        testdict = dict()
+        folder_descriptions = dict()
         for f in folders:
-            testdict[f] = self._get_custom_directory_description(f)
-        print(testdict)
+            folder_descriptions[f] = self._get_custom_directory_description(f)
 
         # apply specific to the items
-        visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings)
+        visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings, folder_descriptions)
 
         custom_directory_template_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings,
                                                                             'directory_template_path',
                                                                             'template/directory.pt')
-
         # send it to the general directory view
         directory_entry = render(custom_directory_template_path, dict(dir=self.request.matchdict['dir'],
                                                                       visible_items_by_extension=visible_items_by_extension,
@@ -109,6 +108,7 @@ class DirectoryRequest:
 
     @view_config(route_name='directory', permission='authenticatedusers', request_method='POST')
     def directory_config(self):
+        logger = logging.getLogger(__name__)
         if 'save_target' in self.request.POST:
             description_obj = {}
             if 'shortdescription' in self.request.POST and 'longdescription' in self.request.POST:
@@ -122,8 +122,8 @@ class DirectoryRequest:
                     with open(save_path, 'w') as json_file:
                         json_file.write(jsonpickle.encode(description_obj))
                 except BaseException as e:
-                    # TODO: how to handle this? somehow not so easy to set new get parameters
-                    print(str(e))
+                    # TODO: how to handle this? somehow not so easy to set new get parameters for the new request
+                    logger.warning('Error occured while saving the folder description: {0}'.format(str(e)))
 
         subreq = self.request.copy()
         subreq.method = 'GET'

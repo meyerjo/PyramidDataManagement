@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 
@@ -12,6 +13,7 @@ class TemplateHandler:
 
     @staticmethod
     def loadCustomTemplate(request, directory_settings, template_str, fallbackoption):
+        # TODO: template_str is not used. refactor this or use it
         custom_template_path = None
         base_path = request.registry.settings['root_dir']
         relative_path = DirectoryRequestHandler.requestfolderpath(request)
@@ -52,7 +54,8 @@ class TemplateHandler:
         html = specific_template(grouped_files=filenames, columnwidth=column_width)
         return html
 
-    def apply_templates(self, dict_items, directory_settings):
+    def apply_templates(self, dict_items, directory_settings, folder_descriptions=None):
+        logger = logging.getLogger(__name__)
         # apply specific to the items
         for (filter_criteria, filenames) in dict_items.items():
             folder_template = None if 'folder_template' not in directory_settings else directory_settings[
@@ -67,11 +70,23 @@ class TemplateHandler:
                 dict_items[filter_criteria] = [html]
             else:
                 template = None
+                folder = False
                 if filter_criteria != '' and not filter_criteria == '..' and file_template is not None:
                     template = PageTemplate(file_template)
                 elif filter_criteria == '' and folder_template is not None:
                     template = PageTemplate(folder_template)
+                    folder = True
+                else:
+                    logger.warning('Unknown filter_criteria')
                 if template is not None:
-                    tmp = [template(item=file) for file in filenames]
+                    tmp = []
+                    for file in filenames:
+                        # preview files
+                        if folder_descriptions is not None and file in folder_descriptions:
+                            tmp.append(template(item=file, folderdescription=folder_descriptions[file]['shortdescription']))
+                        else:
+                            tmp.append(template(item=file))
                     dict_items[filter_criteria] = tmp
+                else:
+                    logger.warning('template is not set')
         return dict_items
