@@ -82,6 +82,7 @@ def main(global_config, **settings):
 
     config.add_route('directory', '/{dir:' + dir_path + '}')
     config.add_route('static', '/_static/*subpath')
+    config.add_route('files_comment', '/{file:' + dir_path + file_basename + '}/{action:comment}', permission='authenticatedusers')
     config.add_route('files', '/*subpath', permission='authenticatedusers')
 
     log.info('Add views')
