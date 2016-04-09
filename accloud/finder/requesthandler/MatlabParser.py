@@ -6,6 +6,7 @@ import re
 
 
 class MatlabParser:
+    # TODO: this only works for files saved in the -v7.3 format ==> make it more general
     def __init__(self, filename, datasetmaximum=200, groupmaximum=200):
         self._filename = filename
         self._groupmaximum = groupmaximum
