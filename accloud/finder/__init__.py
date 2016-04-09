@@ -1,12 +1,16 @@
 '''HTTP Server and Request Handlers to explore ACcloud experiments'''
 import logging
 import os
-from wsgiref.simple_server import make_server
+import re
+
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.static import static_view
+from sqlalchemy import engine_from_config
+
 from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
+from models import initialize_sql
 from .security import UserManager, PythonUserManager, FileBasedUserManager
 
 log = logging.getLogger(__name__)
@@ -40,9 +44,22 @@ def load_usermanager(settings):
             settings['usermanager'] = PythonUserManager()
     return settings
 
+def load_database_settings(settings):
+    log = logging.getLogger(__name__)
+    sqlalchemy_settings_exists = False
+    for key in settings.keys():
+        if re.match('^sqlalchemy\.', key):
+            sqlalchemy_settings_exists = True
+    if not sqlalchemy_settings_exists:
+        settings['sqlalchemy.url'] = 'sqlite:///C:\\code\\ACcloud\\bin/update.sqlite'
+        log.warning("Warning: No sqlalchemy settings specified {0}".format(settings['sqlalchemy.url']))
+    return settings
+
 
 def main(global_config, **settings):
     settings = load_usermanager(settings)
+    settings = load_database_settings(settings)
+
     secrethash = settings['secret'] if 'secret' in settings else 'sosecret'
     authn_policy = AuthTktAuthenticationPolicy(secrethash, callback=settings['usermanager'].groupfinder,
                                                hashalg='sha512')
@@ -50,16 +67,21 @@ def main(global_config, **settings):
     config = Configurator(settings=settings, root_factory=root_factory(settings))
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
-
     config.registry.settings['directory_settings'] = dict()
+
+    log.info('Engine from config')
+    config.scan('models')
+    engine = engine_from_config(settings, 'sqlalchemy.')
+    initialize_sql(engine)
 
     # load directory settings
     log.info('Load settings')
     DirectoryLoadSettings().load_server_settings(config.registry.settings['root_dir'], config)
-    log.info('Adding routes')
 
+    log.info('Adding routes')
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
+
 
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
@@ -95,4 +117,6 @@ def main(global_config, **settings):
     config.add_view(static, route_name='static')
     config.add_view(files, route_name='files', permission='authenticatedusers')
     config.scan()
+
+    log.info('Start app')
     return config.make_wsgi_app()

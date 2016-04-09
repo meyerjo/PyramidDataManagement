@@ -1,0 +1,89 @@
+        <script language="javascript" type="text/javascript">
+          function resizeIframe(obj) {
+            obj.style.height = 0.8*obj.contentWindow.document.body.scrollHeight + 'px';
+          }
+
+          function span_to_form(obj) {
+            var element = $(obj).closest('div.row');
+            var elementname = $(obj).attr('name');
+            var editspan = $(element).find('#' + elementname);
+            var content = $(editspan).html();
+
+            var res = elementname.search(/_/);
+            var fieldtype = elementname.substring(res+1)
+            console.log(fieldtype);
+
+            new_edit_form = $('<form method="POST"></form>')
+                .attr({method: 'POST'})
+                .append(
+                    $('<textarea></textarea>')
+                        .html(content)
+                        .attr({'class': 'col-sm-12',
+                               'rows': 10,
+                               'name': fieldtype})
+                )
+                .append(
+                    $('<button></button>')
+                        .attr({name: 'save_' + fieldtype,
+                               class: 'btn btn-success',
+                               type: 'submit',
+                               text: 'Save'})
+                        .html('Save')
+                );
+            $(obj).hide();
+
+            new_html = '<form method="POST">' + $(new_edit_form).html() + '</form>';
+            $(editspan).html(new_html);
+          }
+        </script>
+        <div id='row'>
+            <div class='col-sm-9'>
+              <span tal:switch="python: file[-3:]">
+                <span tal:case="'png'">
+                    <img src='/${file}' class='col-sm-12' width="1024" height="768"/>
+                </span>
+                <span tal:case="default">
+                    <iframe class='col-sm-12' src='/${file}' frameborder="0" scrolling="yes" onload="resizeIframe(this)"></iframe>
+                </span>
+              </span>
+           </div>
+           <div class='col-sm-3'>
+              <h3>Label</h3>
+              <div class='row'>
+                <span id='edit_label' tal:content="label"></span>
+                <button class="btn btn-success" name="edit_label" onclick="javascript:span_to_form(this)">Edit label</button>
+              </div>
+              <h3>Description</h3>
+              <div class='row'>
+                <span id='edit_description' tal:content="description"></span>
+                <button class="btn btn-success" name="edit_description" onclick="javascript:span_to_form(this)">Edit description</button>
+              </div>
+              <span tal:condition="exists: comments">
+                  <h3>Comments</h3>
+                  <div class="col-sm-12" tal:repeat='comment comments'>
+                      <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <span style='font-face:bold' tal:content='comment["person"]'></span>
+                            <span class='text-muted' tal:content='comment["time"]'>
+                        </div>
+                        <div class="panel-body" tal:content='comment["comment"]'>
+                        </div><!-- /panel-body -->
+                      </div><!-- /panel panel-default -->
+                  </div><!-- /col-sm-5 -->
+                  <div class="col-sm-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <span style='font-face:bold' tal:content="logged_in"></span>
+                            <span class='text-muted'></span>
+                        </div>
+                        <div class="panel-body">
+                        <form method="post">
+                            <textarea id="new_comment" name="comment"></textarea>
+                            <button id="save_comment" type="submit" name="save_comment" class="btn btn-success">Save</button>
+                        </form>
+                        </div><!-- /panel-body -->
+                      </div><!-- /panel panel-default -->
+                  </div>
+              </span>
+           </div>
+        </div>
