@@ -1,4 +1,5 @@
 import HTMLParser
+import logging
 import os
 import shutil
 
@@ -79,6 +80,7 @@ class DirectoryLoadSettings(DirectoryRequestHandler):
     def load_server_settings(root_dir, config):
         assert(hasattr(config, 'registry'))
         assert(hasattr(config.registry, 'settings'))
+        log = logging.getLogger(__name__)
         for root, dirs, files in os.walk(root_dir):
             root = os.path.abspath(root)
             if '.settings.json' in files:
@@ -103,8 +105,7 @@ class DirectoryLoadSettings(DirectoryRequestHandler):
                         'reload_templates']
                     config.registry.settings['directory_settings'][root]['path'] = filename
                 except Exception as e:
-                    print(e.message)
-
+                    log.error(e.message)
             else:
                 path = os.path.abspath(root + '/..')
                 if path in config.registry.settings['directory_settings']:
