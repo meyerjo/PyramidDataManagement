@@ -1,3 +1,5 @@
+import logging
+
 import h5py
 import numpy as np
 import re
@@ -113,15 +115,20 @@ class MatlabParser:
         Outputs the file structure from the matlab file
         :return:
         """
-        with h5py.File(self._filename) as matfile:
-            matlabkeys = matfile.keys()
-            emptyvalues = [None] * len(matlabkeys)
-            keydict = dict(zip(matlabkeys, emptyvalues))
+        try:
+            with h5py.File(self._filename) as matfile:
+                matlabkeys = matfile.keys()
+                emptyvalues = [None] * len(matlabkeys)
+                keydict = dict(zip(matlabkeys, emptyvalues))
 
-            for key in keydict.keys():
-                currentkey = matfile[key]
-                keypath = [key]
-                keydict[key] = self._traverse_h5pygroups(matfile, currentkey, keypath)
+                for key in keydict.keys():
+                    currentkey = matfile[key]
+                    keypath = [key]
+                    keydict[key] = self._traverse_h5pygroups(matfile, currentkey, keypath)
+        except BaseException as e:
+            log = logging.getLogger(__name__)
+            log.error(e.message)
+            keydict = dict(error='Error: {0}b'.format(str(e)))
 
         return keydict
 

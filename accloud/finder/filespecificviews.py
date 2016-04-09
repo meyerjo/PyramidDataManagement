@@ -19,33 +19,6 @@ class FileSpecificViews:
         self.request = request
         self.logged_in = request.authenticated_userid
 
-        self._keyDicthtml = PageTemplate('''
-            <tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
-                <th tal:content="key"></th>
-                <span tal:condition="python: not isinstance(values, dict)">
-                    <td tal:attributes="id values[3]">
-                        <span tal:content="values[1]"/>
-                        <button class="btn btn-success" tal:condition="python: not values[2]">Expand</button>
-                    </td>
-                </span>
-                <td tal:condition="python: isinstance(values, dict)">
-                    <table metal:define-macro="filter_depth" >
-                        <tr tal:repeat="(subkeys, subvalues) values.items()">
-                            <th tal:content="subkeys" tal:condition="python: subkeys is not []"/>
-                            <td tal:condition="python: not isinstance(subvalues, dict)" tal:attributes="id subvalues[3]">
-                                <span tal:content="subvalues[1]"/>
-                                <button class="btn btn-success" tal:condition="python: not subvalues[2]">Expand</button>
-                            </td>
-                            <td tal:condition="python: isinstance(subvalues, dict)">
-                                <table tal:define="values subvalues"
-                                       metal:use-macro="template.macros['filter_depth']"/>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        ''')
-
     @view_config(route_name='csv', renderer='template/index.pt', permission='authenticatedusers')
     @view_config(route_name='csv_delimiter', renderer='template/index.pt', permission='authenticatedusers')
     def csv_table(self):
@@ -123,43 +96,13 @@ class FileSpecificViews:
             split_keys = subkeypath.split('&')
             keydict = MatlabParser(matlabpath).specific_element(split_keys)
             keydict = {split_keys[-1]: keydict}
-            keys_html = self._keyDicthtml(keydictionaries=keydict)
-            return Response(keys_html)
-
-        table = PageTemplate('''
-                <script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
-                <script>
-                    $(document).ready(function() {
-                        $("button").on('click', function() {
-                            parent_id = $(this).parent().attr("id");
-                            parent = $(this).closest('tr');
-                            $.ajax({
-                                url: window.location.href + '/' + parent_id,
-                                method: 'GET'
-                            }).done(function(data) {
-                                $(parent).replaceWith(data);
-                            });
-                        });
-                    });
-                </script>
-                <style>
-                tr.border_bottom td {
-                  border-bottom:1pt solid black;
-                }
-                tr.border_bottom th {
-                  border-bottom:1pt solid black;
-                }
-                </style>
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th tal:repeat="title matlabheaders" tal:content="title"/>
-                    </tr>
-                    ${structure: rows}
-                </table>''')
+            return Response(render('template/matfiles_overview.pt', dict(keydictionaries=keydict)))
 
         matlabheaders = ['Keys', 'Values']
         keydict = MatlabParser(matlabpath).retrieve_structure()
-        keys_html = self._keyDicthtml(keydictionaries=keydict)
-        table_html = table(matlabheaders=matlabheaders, rows=keys_html)
+        keys_html = render('template/matfiles_overview.pt',
+                           dict(keydictionaries=keydict))
+        table_html = render('template/matfiles.pt',
+                            dict(matlabheaders=matlabheaders, rows=keys_html))
         return dict(request=self.request, html=table_html, files=dict(), folders=['.', '..'],
                     logged_in=self.request.authenticated_userid)

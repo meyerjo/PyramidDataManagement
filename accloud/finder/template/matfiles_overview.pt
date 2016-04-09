@@ -1,0 +1,24 @@
+<tr tal:repeat="(key, values) keydictionaries.items()" class="border_bottom">
+    <th tal:content="key"></th>
+                <span tal:condition="python: not isinstance(values, dict)">
+                    <td tal:attributes="id values[3]">
+                        <span tal:content="values[1]"/>
+                        <button class="btn btn-success" tal:condition="python: not values[2]">Expand</button>
+                    </td>
+                </span>
+    <td tal:condition="python: isinstance(values, dict)">
+        <table metal:define-macro="filter_depth" >
+            <tr tal:repeat="(subkeys, subvalues) values.items()">
+                <th tal:content="subkeys" tal:condition="python: subkeys is not []"/>
+                <td tal:condition="python: not isinstance(subvalues, dict)" tal:attributes="id subvalues[3]">
+                    <span tal:content="subvalues[1]"/>
+                    <button class="btn btn-success" tal:condition="python: not subvalues[2]">Expand</button>
+                </td>
+                <td tal:condition="python: isinstance(subvalues, dict)">
+                    <table tal:define="values subvalues"
+                            metal:use-macro="template.macros['filter_depth']"/>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
