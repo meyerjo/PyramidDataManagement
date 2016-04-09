@@ -1,4 +1,4 @@
-from accloud.finder.fileHandler import open_resource
+from finder.requesthandler.fileHandler import open_resource
 
 
 class CSVHandler:

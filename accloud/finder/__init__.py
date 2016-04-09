@@ -9,7 +9,7 @@ from pyramid.config import Configurator
 from pyramid.static import static_view
 from sqlalchemy import engine_from_config
 
-from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
+from finder.requesthandler.directorySettingsHandler import DirectoryLoadSettings
 from models import initialize_sql
 from .security import UserManager, PythonUserManager, FileBasedUserManager
 

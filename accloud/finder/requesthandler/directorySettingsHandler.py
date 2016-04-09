@@ -7,7 +7,7 @@ import jsonpickle
 from pyramid.renderers import render
 from pyramid.response import Response
 
-from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
 
 
 class DirectoryCreateLocalSettings(DirectoryRequestHandler):

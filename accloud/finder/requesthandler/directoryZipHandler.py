@@ -4,8 +4,8 @@ from zipfile import ZipFile
 
 from pyramid.response import Response
 
-from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
-from accloud.finder.itemgrouper import ItemGrouper
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.itemgrouper import ItemGrouper
 
 
 class DirectoryZipHandler(DirectoryRequestHandler):

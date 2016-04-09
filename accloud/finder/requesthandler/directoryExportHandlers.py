@@ -6,8 +6,8 @@ from pdfkit import pdfkit
 from pyramid.renderers import render
 from pyramid.response import Response
 
-from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
-from accloud.finder.markdownexport import PresentationMarkdownExport, MarkdownExport
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.markdownexport import PresentationMarkdownExport, MarkdownExport
 
 
 class PresentationExportHandler(DirectoryRequestHandler):

@@ -7,11 +7,11 @@ from pyramid.renderers import render
 from pyramid.response import Response
 from pyramid.view import view_config
 
-from accloud.finder.MatlabParser import MatlabParser
-from accloud.finder.csvHandler import CSVHandler
-from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
-from accloud.finder.directorySettingsHandler import DirectoryUpdateLocalSettings
-from accloud.finder.fileHandler import open_resource
+from finder.requesthandler.MatlabParser import MatlabParser
+from finder.requesthandler.csvHandler import CSVHandler
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.directorySettingsHandler import DirectoryUpdateLocalSettings
+from finder.requesthandler.fileHandler import open_resource
 
 
 class FileSpecificViews:

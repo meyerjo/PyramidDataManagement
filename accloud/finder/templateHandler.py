@@ -4,7 +4,7 @@ import os
 
 from chameleon import PageTemplate
 
-from accloud.finder.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
 
 
 class TemplateHandler:

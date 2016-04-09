@@ -3,7 +3,7 @@ import mimetypes
 import os
 import re
 
-from accloud.finder.itemgrouper import ItemGrouper
+from finder.requesthandler.itemgrouper import ItemGrouper
 
 
 class MarkdownExport:

@@ -8,7 +8,7 @@ from pyramid.config import Configurator
 from pyramid.static import static_view
 
 from accloud.finder import UserManager
-from accloud.finder.directorySettingsHandler import DirectoryLoadSettings
+from finder.requesthandler.directorySettingsHandler import DirectoryLoadSettings
 
 
 def root_factory(settings):
