@@ -14,6 +14,8 @@ from pyramid.view import (
 from accloud.finder.templateHandler import TemplateHandler
 from finder.requesthandler.directorySettingsHandler import DirectoryLoadSettings, DirectoryCreateLocalSettings
 from finder.requesthandler.itemgrouper import ItemGrouper
+from models import DBSession
+from models.FileLabelModel import FileLabelModel
 
 
 class DirectoryRequest:
@@ -86,12 +88,22 @@ class DirectoryRequest:
         if '' in files:
             del files['']
 
+        element_labels = dict()
+        for elem in vi:
+            qsm = self.request.matchdict['dir']  + elem
+            results = DBSession.query(FileLabelModel.label).filter(FileLabelModel.filename == qsm).all()
+            if len(results) > 0:
+                label = results[-1][0]
+                element_labels[elem] = label
+
         folder_descriptions = dict()
         for f in folders:
             folder_descriptions[f] = self._get_custom_directory_description(f)
 
         # apply specific to the items
-        visible_items_by_extension = TemplateHandler().apply_templates(visible_items_by_extension, directory_settings, folder_descriptions)
+        visible_items_by_extension = TemplateHandler().\
+            apply_templates(visible_items_by_extension,
+                            directory_settings, folder_descriptions, element_labels)
 
         custom_directory_template_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings,
                                                                             'directory_template_path',

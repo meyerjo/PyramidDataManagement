@@ -51,6 +51,7 @@ def load_database_settings(settings):
         if re.match('^sqlalchemy\.', key):
             sqlalchemy_settings_exists = True
     if not sqlalchemy_settings_exists:
+        # TODO: make this string more general ;)
         settings['sqlalchemy.url'] = 'sqlite:///C:\\code\\ACcloud\\bin/update.sqlite'
         log.warning("Warning: No sqlalchemy settings specified {0}".format(settings['sqlalchemy.url']))
     return settings

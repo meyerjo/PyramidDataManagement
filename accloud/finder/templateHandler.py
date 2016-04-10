@@ -39,7 +39,7 @@ class TemplateHandler:
 
 
     @staticmethod
-    def _apply_specific_templates(filenames, extension_specific):
+    def _apply_specific_templates(filenames, extension_specific, element_labels):
         """
         Applies the specific templates which are set in the directory_settings to the list of files
         :param filenames:
@@ -51,10 +51,10 @@ class TemplateHandler:
         column_width = int(math.ceil(bootstrap_columns / elements_per_row))
 
         specific_template = PageTemplate(extension_specific['template'])
-        html = specific_template(grouped_files=filenames, columnwidth=column_width)
+        html = specific_template(grouped_files=filenames, columnwidth=column_width, labels=element_labels)
         return html
 
-    def apply_templates(self, dict_items, directory_settings, folder_descriptions=None):
+    def apply_templates(self, dict_items, directory_settings, folder_descriptions=None, element_labels=None):
         """
         Apply the template specified in the direcotry settings to all elements in the dict_items dictionary
         """
@@ -72,7 +72,7 @@ class TemplateHandler:
 
             if filter_criteria in special_filetemplates:
                 extension_specific = special_filetemplates[filter_criteria]
-                html = self._apply_specific_templates(filenames, extension_specific)
+                html = self._apply_specific_templates(filenames, extension_specific, element_labels)
                 dict_items[filter_criteria] = [html]
             else:
                 # check for the template
@@ -86,6 +86,7 @@ class TemplateHandler:
                 # apply elements to the template
                 if template is not None:
                     tmp = []
+                    print(filenames)
                     for file in filenames:
                         # preview files
                         if folder_descriptions is not None and file in folder_descriptions:
