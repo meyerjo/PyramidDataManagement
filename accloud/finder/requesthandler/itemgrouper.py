@@ -1,9 +1,11 @@
+import logging
 import mimetypes
 import os
 import re
 import numpy
 import sys
 from Levenshtein._levenshtein import distance
+from pyramid.renderers import render
 
 
 class ItemGrouper:
@@ -143,7 +145,7 @@ class ItemGrouper:
                 invisible_items.append(file)
         return items_dict, visible_items, invisible_items
 
-    def _apply_filter_to_items(self, items, filter):
+    def _apply_filter_to_items(self, items, filter, is_last_filterrule=False):
         """
         Gets a list of string items and a list of filtercriteria consisting of regular_expressions and filters them into a dictionary
         :param items: list of strings
@@ -167,7 +169,7 @@ class ItemGrouper:
         assert (len(filtercriteria) >= 1)
         returning_dict = dict()
         if isinstance(items, list):
-            returning_dict = self._apply_filter_to_items(items, str(filtercriteria[0]))
+            returning_dict = self._apply_filter_to_items(items, str(filtercriteria[0]), len(filtercriteria) == 1)
         if len(filtercriteria) == 1:
             return returning_dict
 
@@ -213,6 +215,33 @@ class ItemGrouper:
         else:
             return items
 
+    def convert_leafs_to_dicts(self, tree):
+        def _convert_list_to_listdict(l):
+            if len(l) == 0:
+                return l
+            for i, item in enumerate(l):
+                if isinstance(item, list):
+                    l[i] = _convert_list_to_listdict(item)
+                elif isinstance(item, str) or isinstance(item, unicode):
+                    l[i] = dict(filename=item)
+                else:
+                    log = logging.getLogger(__name__)
+                    log.warning('Unexpected element type in _convert_list_to {0}'.format(type(item)))
+            return l
+
+        if not isinstance(tree, dict):
+            log = logging.getLogger(__name__)
+            log.info('Type of tree is not dict, script will stop thus {0}: {1}'.format(type(tree)), tree)
+            return tree
+        for (key, value) in tree.items():
+            if isinstance(value, dict):
+                tree[key] = self.convert_leafs_to_dicts(value)
+            elif isinstance(value, list):
+                tree[key] = _convert_list_to_listdict(value)
+        return tree
+
+
+
     def group_folder(self, files, directory_settings):
         # restructure files and split them according to their fileextension
         blacklist = None
@@ -230,12 +259,13 @@ class ItemGrouper:
 
         visible_items_by_extension['..'] = ['..']
 
-        # filter files
+        # group the files by their individual
         for (extension, filenames) in visible_items_by_extension.items():
-            if 'specific_filetemplates' in directory_settings:
-                if extension in directory_settings['specific_filetemplates']:
-                    extension_specific = directory_settings['specific_filetemplates'][extension]
-                    groupedfiles, errors = self._group_files_by_specific_criteria(filenames, extension_specific)
-                    visible_items_by_extension[extension] = groupedfiles
+            if 'specific_filetemplates' not in directory_settings:
+                continue
+            if extension in directory_settings['specific_filetemplates']:
+                extension_specific = directory_settings['specific_filetemplates'][extension]
+                groupedfiles, errors = self._group_files_by_specific_criteria(filenames, extension_specific)
+                visible_items_by_extension[extension] = groupedfiles
 
         return visible_items_by_extension, visible_items, invisible_items

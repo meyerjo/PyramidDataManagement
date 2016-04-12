@@ -1,0 +1,27 @@
+<div tal:repeat='(group, rows) sorted(grouped_files.items())' tal:attributes='id group'
+        class='elements' data-html='true' metal:define-macro='filter_depth'>
+    <h3 style="display:inline">
+        <span tal:repeat="g groups">
+            <a href="#${g}"><span tal:content="g"></span></a>
+            <i class="fa fa-chevron-right"></i>
+        </span>
+        <h2 tal:content="group" style="display:inline"></h2>
+    </h3>
+    <div tal:condition='python: type(rows) is dict' tal:define='grouped_files rows; groups groups + [group,]'>
+        <div metal:use-macro='template.macros["filter_depth"]'></div>
+    </div>
+    <!-- TODO: list of dicts passes this test -->
+    <div class='row' tal:condition='python: type(rows) is list' tal:repeat='files rows'>
+        <div tal:repeat='file files' class='col-sm-${columnwidth}'>
+            <!-- TODO: move this to the key specific part -->
+            <tal:block tal:condition="python:isinstance(file, dict)">
+                <tal:block tal:condition="'html' in file">
+                    ${structure:file['html']}
+                </tal:block>
+            </tal:block>
+            <tal:block tal:condition="python:not isinstance(file, dict)">
+                no dict: ${file} ${files}
+            </tal:block>
+        </div>
+    </div>
+</div>

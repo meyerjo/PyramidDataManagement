@@ -88,6 +88,8 @@ class DirectoryRequest:
         if '' in files:
             del files['']
 
+        # get labels
+        # TODO: add this to the dictionary converted group_folder
         element_labels = dict()
         for elem in vi:
             qsm = self.request.matchdict['dir']  + elem
@@ -100,10 +102,22 @@ class DirectoryRequest:
         for f in folders:
             folder_descriptions[f] = self._get_custom_directory_description(f)
 
-        # apply specific to the items
-        visible_items_by_extension = TemplateHandler().\
-            apply_templates(visible_items_by_extension,
-                            directory_settings, folder_descriptions, element_labels)
+
+        if 'specific_filetemplates' in directory_settings:
+            for (key, value) in visible_items_by_extension.items():
+                if key not in directory_settings['specific_filetemplates']:
+                    continue
+
+                # could crash in one level cases
+                visible_items_by_extension[key] = ItemGrouper().convert_leafs_to_dicts(visible_items_by_extension[key])
+
+                # apply specific to the items
+                # TODO: if there is a specific key template, iterate till 'filename' is found then apply specific template
+                # for the whole tree apply then the specific key template
+                key_path = [key]
+                visible_items_by_extension[key] = TemplateHandler().\
+                    apply_templates(visible_items_by_extension[key],
+                                    directory_settings, folder_descriptions, overwrite_key=key, keypath=key_path)
 
         custom_directory_template_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings,
                                                                             'directory_template_path',

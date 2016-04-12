@@ -1,0 +1,24 @@
+<tal:block tal:switch="'filename' in file">
+    <div class='row-fluid' tal:case='True'>
+        <tal:block tal:switch="python: ('label' in file) and (isinstance(file, dict))">
+            <tal:block tal:case="True">
+                <div class='col-sm-12'>
+                    Label: <span tal:content="file.label"></span>
+                </div>
+            </tal:block>
+            <tal:block tal:case="False">
+                <div class='col-sm-12'>
+                    File: <span tal:content="file.filename"></span>
+                </div>
+            </tal:block>
+        </tal:block>
+        <div class='col-sm-12'>
+            <a tal:attributes='href file.filename; data-title file.filename' data-toggle='lightbox'>
+                <img tal:attributes="src file.filename" class='col-sm-12'>
+            </a>
+        </div>
+    </div>
+    <div class="row-fluid" tal:case="False">
+        Field missing ${file}
+    </div>
+</tal:block>
