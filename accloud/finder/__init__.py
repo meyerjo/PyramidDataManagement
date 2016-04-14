@@ -3,6 +3,7 @@ import logging
 import os
 import re
 
+from chameleon import PageTemplate
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
@@ -82,7 +83,6 @@ def main(global_config, **settings):
     log.info('Adding routes')
     dir_path = r'([\w\-\_]*\/)*'
     file_basename = r'[\w\-\_\.]*'
-
 
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')

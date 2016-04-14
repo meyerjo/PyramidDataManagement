@@ -1,6 +1,7 @@
 import logging
 import math
 import os
+import re
 
 from chameleon import PageTemplate
 from pyramid.renderers import render
@@ -75,43 +76,19 @@ class TemplateHandler:
                 log.warning('Got an unexpected type {0}'.format(type(tree)))
             return tree
 
-        template_leafs = '''
-        <tal:block tal:switch="'filename' in file">
-            <div class='row-fluid' tal:case='True'>
-                <tal:block tal:switch="python: ('label' in file) and (isinstance(file, dict))">
-                    <tal:block tal:case="True">
-                        <div class='col-sm-12'>
-                            Label: <span tal:content="file.label"></span>
-                        </div>
-                    </tal:block>
-                    <tal:block tal:case="False">
-                        <div class='col-sm-12'>
-                            File: <span tal:content="file.filename"></span>
-                        </div>
-                    </tal:block>
-                </tal:block>
-                <div class='col-sm-12'>
-                    <a tal:attributes='href file.filename; data-title file.filename' data-toggle='lightbox'>
-                        <img tal:attributes="src file.filename" class='col-sm-12'>
-                    </a>
-                </div>
-            </div>
-            <div class="row-fluid" tal:case="False">
-                Field missing ${file}
-            </div>
-        </tal:block>
-        '''
-        test = PageTemplate(template_leafs)
-        filedict_with_html = iterate_structure(filenames, test)
+        # load template and check if it comes from an old version
+        template = PageTemplate(extension_specific['template'], keep_body=True)
+        if re.search('grouped_files', template.body) is not None:
+            log = logging.getLogger(__name__)
+            log.warning('Using an old template ==> Not working since update')
+            template = PageTemplate('<div>Found an outdated template, while compiling <span tal:content="file"></span></div>'.format(template.body), keep_body=True)
+        filedict_with_html = iterate_structure(filenames, template)
 
         bootstrap_columns = 12
         elements_per_row = extension_specific['elements_per_row']
         column_width = int(math.ceil(bootstrap_columns / elements_per_row))
 
-        #specific_template = PageTemplate(extension_specific['template'])
-        #html = specific_template(grouped_files=filenames, columnwidth=column_width, labels=element_labels)
         if isinstance(filedict_with_html, list):
-            # TODO: check if there is a better solution
             filedict_with_html = {keypath[-1]: filedict_with_html}
             keypath = keypath[:-1]
 
@@ -155,19 +132,16 @@ class TemplateHandler:
                 else:
                     logger.warning('Unknown filter_criteria "{0}"'.format(filter_criteria))
                 # apply elements to the template
-                if template is not None:
-                    tmp = []
-                    print(filenames)
-                    for file in filenames:
-                        # preview files
-                        print(file)
-                        if folder_descriptions is not None and file in folder_descriptions:
-                            tmp.append(template(item=file, folderdescription=folder_descriptions[file]['shortdescription']))
-                        else:
-                            tmp.append(template(item=file))
-                    dict_items[filter_criteria] = tmp
-                else:
+                if template is None:
                     logger.warning('Template is not set: {0}'.format(filter_criteria))
                     if filter_criteria in dict_items:
                         del dict_items[filter_criteria]
+                    continue
+
+                tmp = []
+                for file in filenames:
+                    # preview files
+                    tmp.append(template(item=file) if folder_descriptions is None or file not in folder_descriptions else
+                               template(item=file, folder_descriptions=folder_descriptions[file]['shortdescription']))
+                dict_items[filter_criteria] = tmp
         return dict_items

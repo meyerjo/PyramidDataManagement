@@ -60,6 +60,17 @@ class DirectoryRequest:
         listing = os.listdir(relative_path)
         return '.settings.json' in listing
 
+    def _retrieve_labels(self, folder,  filenames_displayed):
+        element_labels = dict()
+        for elem in filenames_displayed:
+            qsm = folder  + elem
+            results = DBSession.query(FileLabelModel.label).filter(FileLabelModel.filename == qsm).all()
+            if len(results) > 0:
+                # only retrieve the newest entry
+                label = results[-1][0]
+                element_labels[elem] = dict(label=label)
+        return element_labels
+
     @view_config(route_name='directory', permission='authenticatedusers', request_method='GET')
     def directory(self):
         # TODO: load the description files
@@ -89,27 +100,19 @@ class DirectoryRequest:
             del files['']
 
         # get labels
-        # TODO: add this to the dictionary converted group_folder
-        element_labels = dict()
-        for elem in vi:
-            qsm = self.request.matchdict['dir']  + elem
-            results = DBSession.query(FileLabelModel.label).filter(FileLabelModel.filename == qsm).all()
-            if len(results) > 0:
-                label = results[-1][0]
-                element_labels[elem] = label
+        element_labels = self._retrieve_labels(self.request.matchdict['dir'], vi)
 
+        # get all folde descriptions
         folder_descriptions = dict()
         for f in folders:
             folder_descriptions[f] = self._get_custom_directory_description(f)
-
 
         if 'specific_filetemplates' in directory_settings:
             for (key, value) in visible_items_by_extension.items():
                 if key not in directory_settings['specific_filetemplates']:
                     continue
-
                 # could crash in one level cases
-                visible_items_by_extension[key] = ItemGrouper().convert_leafs_to_dicts(visible_items_by_extension[key])
+                visible_items_by_extension[key] = ItemGrouper().convert_leafs_to_dicts(visible_items_by_extension[key], filespecific_updates=element_labels)
 
                 # apply specific to the items
                 # TODO: if there is a specific key template, iterate till 'filename' is found then apply specific template
@@ -117,7 +120,8 @@ class DirectoryRequest:
                 key_path = [key]
                 visible_items_by_extension[key] = TemplateHandler().\
                     apply_templates(visible_items_by_extension[key],
-                                    directory_settings, folder_descriptions, overwrite_key=key, keypath=key_path)
+                                    directory_settings, folder_descriptions,
+                                    overwrite_key=key, keypath=key_path)
 
         custom_directory_template_path = TemplateHandler.loadCustomTemplate(self.request, directory_settings,
                                                                             'directory_template_path',
