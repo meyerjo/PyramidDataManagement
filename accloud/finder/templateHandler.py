@@ -41,30 +41,36 @@ class TemplateHandler:
 
 
     @staticmethod
-    def _apply_specific_templates(filenames, extension_specific, keypath=[]):
+    def _apply_specific_templates(filenames, extension_specific, keypath=None):
         """
         Applies the specific templates which are set in the directory_settings to the list of files
         :param filenames:
         :param extension_specific:
         :return:
         """
-        def iterate_structure(tree, template_leafs):
+        def apply_templates_to_leafnodes(tree, template_leafs):
             def iterate_list(elementlist, template_leafs):
                 for i, item in enumerate(elementlist):
                     if isinstance(item, dict):
                         if 'filename' in item:
                             # apply the template on this element
-                            tmp_html = template_leafs(file=elementlist[i])
+                            try:
+                                tmp_html = template_leafs(file=elementlist[i])
+                            except BaseException as e:
+                                log = logging.getLogger(__name__)
+                                log.warning('Error occured while applying custom template {0} {1}', e.message, str(e))
+                                tmp_html = 'Error occured while the template was applied to the' \
+                                           ' following element: {0} Message: {1}'.format(elementlist[i], e.message)
                             elementlist[i]['html'] = tmp_html
                         else:
-                            tree[key][i] = iterate_structure(elementlist[i], template_leafs)
+                            tree[key][i] = apply_templates_to_leafnodes(elementlist[i], template_leafs)
                     elif isinstance(item, list):
                         elementlist[i] = iterate_list(elementlist[i], template_leafs)
                 return elementlist
             if isinstance(tree, dict):
                 for (key, value) in tree.items():
                     if isinstance(value, dict) and 'filename' not in value:
-                        tree[key] = iterate_structure(value, template_leafs)
+                        tree[key] = apply_templates_to_leafnodes(value, template_leafs)
                     elif isinstance(value, list):
                         tree[key] = iterate_list(value, template_leafs)
             elif isinstance(tree, list):
@@ -75,6 +81,8 @@ class TemplateHandler:
                 log = logging.getLogger(__name__)
                 log.warning('Got an unexpected type {0}'.format(type(tree)))
             return tree
+        if keypath is None:
+            keypath = []
 
         # load template and check if it comes from an old version
         template = PageTemplate(extension_specific['template'], keep_body=True)
@@ -82,19 +90,21 @@ class TemplateHandler:
             log = logging.getLogger(__name__)
             log.warning('Using an old template ==> Not working since update')
             template = PageTemplate('<div>Found an outdated template, while compiling <span tal:content="file"></span></div>'.format(template.body), keep_body=True)
-        filedict_with_html = iterate_structure(filenames, template)
+        filedict_with_html = apply_templates_to_leafnodes(filenames, template)
 
+        # compute the column width
         bootstrap_columns = 12
         elements_per_row = extension_specific['elements_per_row']
         column_width = int(math.ceil(bootstrap_columns / elements_per_row))
 
+        # adapting the file path
         if isinstance(filedict_with_html, list):
             filedict_with_html = {keypath[-1]: filedict_with_html}
             keypath = keypath[:-1]
 
-        html = render('template/specific_key_template.pt',
+        # "new" step we already applied the template to each individual element and now we format all elements globally
+        return render('template/specific_key_template.pt',
                       dict(grouped_files=filedict_with_html, columnwidth=column_width, groups=keypath))
-        return html
 
     def apply_templates(self, dict_items, directory_settings, folder_descriptions=None, overwrite_key=None, keypath=[]):
         """
