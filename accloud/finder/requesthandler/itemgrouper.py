@@ -215,15 +215,21 @@ class ItemGrouper:
         else:
             return items
 
-    def convert_leafs_to_dicts(self, tree):
-        def _convert_list_to_listdict(l):
+    def convert_leafs_to_dicts(self, tree, filespecific_updates=None):
+        def _convert_list_to_listdict(l, filespecific_updates=None):
             if len(l) == 0:
                 return l
             for i, item in enumerate(l):
                 if isinstance(item, list):
-                    l[i] = _convert_list_to_listdict(item)
+                    l[i] = _convert_list_to_listdict(item, filespecific_updates)
                 elif isinstance(item, str) or isinstance(item, unicode):
                     l[i] = dict(filename=item)
+                    if filespecific_updates is None or not isinstance(filespecific_updates, dict):
+                        continue
+                    if item not in filespecific_updates:
+                        continue
+                    tmp_dict = filespecific_updates[item]
+                    l[i].update(tmp_dict)
                 else:
                     log = logging.getLogger(__name__)
                     log.warning('Unexpected element type in _convert_list_to {0}'.format(type(item)))
@@ -235,12 +241,10 @@ class ItemGrouper:
             return tree
         for (key, value) in tree.items():
             if isinstance(value, dict):
-                tree[key] = self.convert_leafs_to_dicts(value)
+                tree[key] = self.convert_leafs_to_dicts(value, filespecific_updates)
             elif isinstance(value, list):
-                tree[key] = _convert_list_to_listdict(value)
+                tree[key] = _convert_list_to_listdict(value, filespecific_updates)
         return tree
-
-
 
     def group_folder(self, files, directory_settings):
         # restructure files and split them according to their fileextension
@@ -253,9 +257,8 @@ class ItemGrouper:
             if isinstance(spec_ft, dict):
                 special_filter_criteria = spec_ft.keys()
 
-        visible_items_by_extension, visible_items, invisible_items = self._reorganize_files(files,
-                                                                                            special_filter_criteria,
-                                                                                            blacklist)
+        visible_items_by_extension, visible_items, invisible_items = \
+            self._reorganize_files(files, special_filter_criteria, blacklist)
 
         visible_items_by_extension['..'] = ['..']
 
