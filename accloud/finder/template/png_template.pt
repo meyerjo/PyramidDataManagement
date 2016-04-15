@@ -1,24 +1,29 @@
+<tal:block tal:condition="exists:error">
+    <div class="panel panel-error">
+        <div class="panel-heading">
+            <h3 class="panel-title">Error</h3>
+        </div>
+        <div class="panel-body" tal:content="error"></div>
+    </div>
+</tal:block>
 <tal:block tal:switch="'filename' in file">
     <div class='row-fluid' tal:case='True'>
-        <tal:block tal:switch="python: ('label' in file) and (isinstance(file, dict))">
-            <tal:block tal:case="True">
-                <div class='col-sm-12'>
-                    Label: <span tal:content="file.label"></span>
-                </div>
-            </tal:block>
-            <tal:block tal:case="False">
-                <div class='col-sm-12'>
-                    File: <span tal:content="file.filename"></span>
-                </div>
-            </tal:block>
-        </tal:block>
         <div class='col-sm-12'>
-            <a tal:attributes='href file.filename; data-title file.filename' data-toggle='lightbox'>
-                <img tal:attributes="src file.filename" class='col-sm-12'>
-            </a>
+            <figure>
+                <a tal:attributes='href file.filename; data-title file.filename' data-toggle='lightbox'>
+                    <img tal:attributes="src file.filename" class='col-sm-12'>
+                </a>
+                <figcaption style="text-align:center;margin-bottom:10px; font-weight:bold;">
+                    <tal:block tal:switch="python: ('label' in file) and (isinstance(file, dict))">
+                        <tal:block tal:case="True">Label: <span tal:content="file.label"></span></tal:block>
+                        <tal:block tal:case="False">File: <span tal:content="file.filename"></span></tal:block>
+                    </tal:block>
+                    <a href="${file.filename}/comment" class="btn btn-default">Comment, describe</a>
+                </figcaption>
+            </figure>
         </div>
     </div>
     <div class="row-fluid" tal:case="False">
-        Field missing ${file}
+        Field missing: ${file}
     </div>
 </tal:block>
