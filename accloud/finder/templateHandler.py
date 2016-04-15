@@ -7,6 +7,7 @@ from chameleon import PageTemplate
 from pyramid.renderers import render
 
 from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.fileHandler import open_resource
 
 
 class TemplateHandler:
@@ -14,23 +15,27 @@ class TemplateHandler:
         pass
 
     @staticmethod
-    def loadCustomTemplate(request, directory_settings, template_str, fallbackoption):
+    def loadCustomTemplate(request, directory_settings, template_src_settings, fallbackoption):
         # TODO: template_str is not used. refactor this or use it
         custom_template_path = None
         base_path = request.registry.settings['root_dir']
         relative_path = DirectoryRequestHandler.requestfolderpath(request)
 
-        if 'directory_template_path' in directory_settings:
-            dir_path = directory_settings['directory_template_path']
-            if dir_path.startswith('projectlocal:'):
-                dir_path = dir_path[len('projectlocal:'):]
-                custom_template_path = os.path.join(base_path, dir_path)
-            elif dir_path.startswith('folderlocal:'):
-                dir_path = dir_path[len('folderlocal:')]
-                custom_template_path = os.path.join(relative_path, dir_path)
-            elif dir_path.startswith('absolute:'):
-                dir_path = dir_path[len('absolute:'):]
-                custom_template_path = dir_path
+        if template_src_settings in directory_settings:
+            dir_path = directory_settings[template_src_settings]
+            possible_prefixes = {'projectlocal:': base_path, 'folderlocal:': relative_path, 'absolute:': ''}
+
+            found = False
+            for (prefix, path) in possible_prefixes.items():
+                if not dir_path.startswith(prefix):
+                    continue
+                dir_path = dir_path[len(prefix):]
+                custom_template_path = os.path.join(path, dir_path)
+                found = True
+                break
+            if not found:
+                log = logging.getLogger(__name__)
+                log.info('Specified dir_path starts with unknown prefix: {0}'.format(dir_path))
 
         # check if the custom_directory_template is valid
         if custom_template_path is not None and not os.path.exists(custom_template_path):
@@ -83,6 +88,15 @@ class TemplateHandler:
             return tree
         if keypath is None:
             keypath = []
+
+        specified_template = extension_specific['template']
+        specified_template = 'template/png_template.pt'
+        # check if it appears to be a path or an html document
+        if re.search('^(?:[a-zA-Z]\:|\\\\[\w\.]+\\[\w.$]+)\\(?:[\w]+\\)*\w([\w.])+$', specified_template):
+            print(specified_template)
+            # TODO: open load custom template
+        else:
+            print('didnt match {0}'.format(specified_template))
 
         # load template and check if it comes from an old version
         template = PageTemplate(extension_specific['template'], keep_body=True)
