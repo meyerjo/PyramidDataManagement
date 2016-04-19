@@ -31,6 +31,14 @@
                 <div class="alert alert-danger" tal:condition="python: message != ''">
                     <span tal:replace="message"/>
                 </div>
+                <tal:block tal:condition="exists:information">
+                    <tal:block tal:condition="python: (information != '') and (information is not None)">
+                        <div class="panel panel-info">
+                          <div class="panel-heading">Project information</div>
+                          <div class="panel-body" tal:content="information"></div>
+                        </div>
+                    </tal:block>
+                </tal:block>
                 <form class="form-signin" action="${url}" method="post">
                     <input type="hidden" name="came_from" value="${came_from}"/>
                     <h2 class="form-signin-heading">Please sign in</h2>

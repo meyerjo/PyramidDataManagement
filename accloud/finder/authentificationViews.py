@@ -1,4 +1,5 @@
 import logging
+import os
 
 import jsonpickle
 from pyramid.httpexceptions import HTTPFound
@@ -8,6 +9,9 @@ from pyramid.security import forget, remember
 from pyramid.view import view_config, forbidden_view_config
 
 from accloud.finder.security import UserManager
+from finder.requesthandler.directoryRequestHandler import DirectoryRequestHandler
+from finder.requesthandler.fileHandler import open_resource
+
 
 class AuthentificationViews:
 
@@ -37,12 +41,34 @@ class AuthentificationViews:
                                  headers=headers)
             message = 'Failed login'
 
+        description_is_private = False
+        if 'privacy.description' in self.request.registry.settings:
+            description_is_private = self.request.registry.settings['privacy.description'] == 'private'
+
+        # load the information
+        try:
+            relative_path = DirectoryRequestHandler.requestfolderpath(self.request)
+            description = os.path.join(relative_path, '.description.json')
+            if not os.path.exists(description) or description_is_private:
+                information = None
+            else:
+                with open_resource(description) as file:
+                    json_file = file.read()
+                    description_obj = jsonpickle.decode(json_file)
+                    information = description_obj['shortdescription']
+        except BaseException as e:
+            information = 'Error: {0}'.format(e.message)
+            log = logging.getLogger(__name__)
+            log.error(e.message)
+
+
         return dict(
             message=message,
             url=self.request.application_url + '/login',
             came_from=came_from,
             login=login,
             password=password,
+            information=information
         )
 
     @view_config(route_name='logout')
