@@ -1,3 +1,4 @@
+--- Unmaintained ---
 # Fork purpose
 The purpose of this branch is to enhance the web browser experience. Therefore, multiple extensions to the previous framework are made. 
 Every result is wrapped within a bootstrap design with an navigation bar, which allows to leave the file preview more easily, and allows direct file access.
